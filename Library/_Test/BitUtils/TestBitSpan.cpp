@@ -9,17 +9,78 @@ namespace ddahlkvist
 
 static_assert(sizeof(BitWordType) == sizeof(u64));
 
+TEST(BitCountToMaskTest, bitCountToMask_validateCalculations) {
+	{
+		BitWordType mask = bitCountToMask(0);
+		ASSERT_EQ(mask, 0u);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(1);
+		ASSERT_EQ(mask, 1u);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(2);
+		ASSERT_EQ(mask, 0b11);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(3);
+		ASSERT_EQ(mask, 0b111);
+	}
+	{
+		BitWordType mask = bitCountToMask(4);
+		ASSERT_EQ(mask, 0xF);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(6);
+		ASSERT_EQ(mask, 0x3f);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(8);
+		ASSERT_EQ(mask, 0xFF);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(32);
+		ASSERT_EQ(mask, 0xFFFFFFFF);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(33);
+		ASSERT_EQ(mask, 0x1FFFFFFFF);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(63);
+		ASSERT_EQ(mask, 0x7FFFFFFFFFFFFFFF);
+	}
+
+	{
+		BitWordType mask = bitCountToMask(64);
+		ASSERT_EQ(mask, ~0ull);
+		ASSERT_EQ(mask, 0xFFFFFFFFFFFFFFFF);
+	}
+}
+
+TEST(BitCountToMask_DeathTest, bitCountToMask_triggerAssert) {
+	ASSERT_DEBUG_DEATH({ int bitCount = 65; bitCountToMask(bitCount); }, "Assertion failed.*");
+}
+
 class BitSpanFixture : public testing::Test {
 public:
 protected:
-    void SetUp() override { 
+	void SetUp() override {
 		meta::fill_container(_buffer, 0xBEBE0000);
-    }
+	}
 
-    void TearDown() override { 
-    }
+	void TearDown() override {
+	}
 
-    u64 _buffer[100];
+	u64 _buffer[100];
 };
 
 TEST_F(BitSpanFixture, clearBits_rangeIsZeroed) {

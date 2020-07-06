@@ -24,6 +24,46 @@ constexpr BitWordType bitCountToMask(u32 numBits)
 	return value;
 }
 
+
+//
+//struct BitRangeZipper final
+//{
+//	BitRangeZipper(void* __restrict data, void* __restrict data2, u32 bitCount)
+//		: _data(reinterpret_cast<BitWordType*>(data))
+//		, _data2(reinterpret_cast<BitWordType*>(data2))
+//		, _bitCount(bitCount)
+//		, _dangling(_bitCount % 64 != 0)
+//		, _iterations(static_cast<u16>(_bitCount / 64))
+//	{
+//	}
+//
+//	template<typename TemplateEachWordAction, typename TemplateDanglingWordAction>
+//	inline void foreachWord(TemplateEachWordAction&& action, TemplateDanglingWordAction&& danglingAction) noexcept {
+//		auto it1 = _data;
+//		auto it2 = _data2;
+//		auto end = it1 + _iterations;
+//		while (it1 != end)
+//		{
+//			*it1 = action(*it1, *it2);
+//			it1++;
+//			it2++;
+//		}
+//
+//		if (_dangling)
+//		{
+//			auto mask = bitCountToMask(_bitCount);
+//			*it1 = danglingAction(*it1, *it2, mask);
+//		}
+//	}
+//
+//private:
+//	BitWordType* __restrict _data;
+//	BitWordType* __restrict _data2;
+//	u32 _bitCount;
+//	u16 _dangling;
+//	u16 _iterations;
+//};
+
 // provides bit-wise commands on top of range of bytes that it does not own memory for
 class BitSpan final
 {
@@ -69,6 +109,12 @@ public:
 		}
 	}
 
+	//void foo()
+	//{
+	//	u64 sadf[5];
+	//	BitRangeZipper zipper(sadf, sadf, 137);
+	//}
+
 	/*
 	template<class Action>
 	void foreachSetBit(Action&& action)
@@ -110,8 +156,8 @@ public:
 				bitIndex++;
 			}
 
-		}*/
-	}
+		}
+	}*/
 
 private:
 	BitWordType* _data;

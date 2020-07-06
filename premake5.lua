@@ -23,12 +23,12 @@ workspace "CppUtilities"
       symbols "On"
 
    filter {"configurations:Release"}
-      defines { "DD_RELEASE", "RELEASE" }
+      defines { "DD_RELEASE", "RELEASE", "NDEBUG" }
       optimize "On"
       symbols "On"
 
    filter {"configurations:Final"}
-      defines { "DD_FINAL", "FINAL" }
+      defines { "DD_FINAL", "FINAL", "NDEBUG" }
       optimize "On"
       symbols "Off"
 
