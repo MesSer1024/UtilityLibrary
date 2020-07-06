@@ -3,6 +3,7 @@
 #include <Core/Platform.h>
 #include <Core/Types.h>
 #include <Library/library_module.h>
+#include <algorithm>
 
 namespace ddahlkvist
 {
@@ -23,42 +24,60 @@ constexpr BitWordType bitCountToMask(u32 numBits)
 	return value;
 }
 
-
-
 // provides bit-wise commands on top of range of bytes that it does not own memory for
 class BitSpan final
 {
 public:
-	LIBRARY_PUBLIC BitSpan(void* data, u32 bitCount);
+	inline BitSpan(void* data, u32 bitCount)
+		: _data(reinterpret_cast<BitWordType*>(data))
+		, _numBits(bitCount)
+		, _numWords(_numBits / BitsInWord)
+		, _danglingMask(bitCountToMask(_numBits % BitsInWord) )
+	{ }
 
-	//using BitAction = std::function<void(u32 bitIndex)>;
+	inline void clearBits()
+	{
+		auto it = _data;
+		auto end = _data + _numWords;
+		const BitWordType Zero = BitWordType{ 0 };
+		if (end > it)
+		{
+			std::fill(it, end, Zero);
+		}
 
-	//template <typename T>
-	//constexpr inline void foreachSetBit(const T* __restrict source, BitAction action) {
-	//	T word = source[0];
+		if (_danglingMask)
+		{
+			BitWordType dangling = *end & ~_danglingMask;
+			*end = dangling;
+		}
+	}
 
-	//	for (u32 i = 0u; word != 0u; ++i) {
-	//		const bool smallestBitIsSet = word & T(1u);
-	//		if (smallestBitIsSet) {
-	//			action(i);
-	//		}
+	inline void setBits()
+	{
+		auto it = _data;
+		auto end = _data + _numWords;
+		const BitWordType Ones = BitWordType{ ~0ull };
+		if (end > it)
+		{
+			std::fill(it, end, Ones);
+		}
 
-	//		word >>= 1u;
-	//	}
-	//}
+		if (_danglingMask)
+		{
+			BitWordType dangling = (*end & ~_danglingMask) | (Ones & _danglingMask);
+			*end = dangling;
+		}
+	}
 
-
+	/*
 	template<class Action>
 	void foreachSetBit(Action&& action)
 	{
 		BitWordType* wordPtr = reinterpret_cast<BitWordType*>(_data);
 
-		const u32 wordIterations = _bitCount / BitsInWord;
-		const u32 danglingBits = _bitCount & BitsInWord;
-
 		int globalBitIndex = 0;
 		int bitIndex;
-		for (u32 it = 0; it < wordIterations; ++it)
+		for (u32 it = 0; it < _numWords; ++it)
 		{
 			BitWordType value = *wordPtr;
 			bitIndex = globalBitIndex;
@@ -76,9 +95,9 @@ public:
 			wordPtr++;
 		}
 
-		if (danglingBits != 0)
+		if (_danglingMask != 0)
 		{
-			const BitWordType mask = bitCountToMask(danglingBits);
+			const BitWordType mask = bitCountToMask(_danglingMask);
 			BitWordType value = (*wordPtr) & mask;
 			bitIndex = globalBitIndex;
 			while (value != 0u)
@@ -91,12 +110,16 @@ public:
 				bitIndex++;
 			}
 
-		}
+		}*/
 	}
 
 private:
-	void* _data;
-	u32 _bitCount;
+	BitWordType* _data;
+
+	const u32 _numBits;
+	const u32 _numWords;
+
+	const BitWordType _danglingMask;
 };
 
 }

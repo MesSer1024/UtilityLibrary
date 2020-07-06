@@ -15,7 +15,7 @@ TEST(fill_container_tests, arrayValidation) {
     meta::fill_container(values, WordValue);
 
     for (uint i = 0; i < NumWords; ++i)
-        EXPECT_EQ(values[i], WordValue);
+        ASSERT_EQ(values[i], WordValue);
 }
 
 TEST(fill_container_tests, vectorValidation) {
@@ -26,10 +26,10 @@ TEST(fill_container_tests, vectorValidation) {
 
 	meta::fill_container(values, WordValue);
 
-	EXPECT_EQ(values.size(), NumWords);
+	ASSERT_EQ(values.size(), NumWords);
 
 	for (auto v : values)
-		EXPECT_EQ(v, WordValue);
+		ASSERT_EQ(v, WordValue);
 }
 
 //TEST(fill_container_tests, spanValidation) {
@@ -41,10 +41,10 @@ TEST(fill_container_tests, vectorValidation) {
 //
 //	meta::fill_container(valueSpan, WordValue);
 //
-//	EXPECT_EQ(values.size(), NumWords);
+//	ASSERT_EQ(values.size(), NumWords);
 //
 //	for (auto v : values)
-//		EXPECT_EQ(v, WordValue);
+//		ASSERT_EQ(v, WordValue);
 //}
 
 //TEST(fill_container_tests, notOKInitializerList) {
