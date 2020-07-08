@@ -61,6 +61,15 @@ public:
 		, _numWords((numBits / BitsInWord) + (numBits % BitsInWord != 0))
 		, _numBits(numBits)
 	{
+		clearDanglingBits();
+	}
+
+	inline void clearDanglingBits()
+	{
+		if (_numWords > 0) {
+			_lhs[_numWords - 1] &= _danglingMask;
+			_rhs[_numWords - 1] &= _danglingMask;
+		}
 	}
 
 	// examples:
