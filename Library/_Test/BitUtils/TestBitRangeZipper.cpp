@@ -4,7 +4,6 @@
 #include <Core/Meta/Meta.h>
 #include <Core/Types.h>
 #include <gtest/gtest.h>
-#include <numeric>
 
 namespace ddahlkvist
 {

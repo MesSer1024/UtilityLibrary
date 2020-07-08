@@ -4,7 +4,6 @@
 #include <Core/Platform.h>
 #include <Core/Types.h>
 #include <Library/library_module.h>
-#include <algorithm>
 
 namespace ddahlkvist
 {
