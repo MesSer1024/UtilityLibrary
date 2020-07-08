@@ -32,28 +32,29 @@ TEST(fill_container_tests, vectorValidation) {
 		ASSERT_EQ(v, WordValue);
 }
 
-//TEST(fill_container_tests, spanValidation) {
-//	const u32 NumWords = 13;
-//	const u64 WordValue = 7;
-//
-//	std::vector<u64> values(NumWords);
-//	std::span<u64> valueSpan(values);
-//
-//	meta::fill_container(valueSpan, WordValue);
-//
-//	ASSERT_EQ(values.size(), NumWords);
-//
-//	for (auto v : values)
-//		ASSERT_EQ(v, WordValue);
-//}
+TEST(iota_container_tests, arrayValidation) {
+	const u32 NumWords = 13;
+	const u64 WordValue = 7;
 
-//TEST(fill_container_tests, notOKInitializerList) {
-//	const u32 NumWords = 13;
-//	const u64 WordValue = 7;
-//
-//	meta::fill_container({ 13,1,14 }, WordValue);
-//}
+	u64 values[NumWords];
 
+	meta::iota_container(values, WordValue);
+
+	for (uint i = 0; i < NumWords; ++i)
+		ASSERT_EQ(values[i], WordValue + i);
+}
+
+TEST(iota_container_tests, vectorValidation) {
+	const u32 NumWords = 13;
+	const int WordValue = -7;
+
+	std::vector<int> values(NumWords);
+
+	meta::iota_container(values, WordValue);
+
+	for (int i = 0; i < NumWords; ++i)
+		ASSERT_EQ(values[i], WordValue + i);
+}
 
 
 }

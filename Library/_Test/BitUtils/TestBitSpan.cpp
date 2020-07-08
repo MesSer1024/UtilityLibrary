@@ -1,8 +1,8 @@
 #include <Library/BitUtils/BitSpan.h>
 
+#include <Core/Meta/Meta.h>
 #include <Core/Types.h>
 #include <gtest/gtest.h>
-#include <Core/Meta/Meta.h>
 
 namespace ddahlkvist
 {
@@ -11,63 +11,62 @@ static_assert(sizeof(BitWordType) == sizeof(u64));
 
 TEST(BitCountToMaskTest, bitCountToMask_validateCalculations) {
 	{
-		BitWordType mask = bitCountToMask(0);
-		ASSERT_EQ(mask, 0u);
+		constexpr BitWordType mask = numBitsToMask(0);
+		ASSERT_EQ(mask, BitWordType{ 0u });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(1);
-		ASSERT_EQ(mask, 1u);
+		constexpr BitWordType mask = numBitsToMask(1);
+		ASSERT_EQ(mask, BitWordType{ 1u });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(2);
-		ASSERT_EQ(mask, 0b11);
+		constexpr BitWordType mask = numBitsToMask(2);
+		ASSERT_EQ(mask, BitWordType{ 0b11 });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(3);
-		ASSERT_EQ(mask, 0b111);
+		constexpr BitWordType mask = numBitsToMask(3);
+		ASSERT_EQ(mask, BitWordType{ 0b111 });
 	}
 	{
-		BitWordType mask = bitCountToMask(4);
-		ASSERT_EQ(mask, 0xF);
-	}
-
-	{
-		BitWordType mask = bitCountToMask(6);
-		ASSERT_EQ(mask, 0x3f);
+		constexpr BitWordType mask = numBitsToMask(4);
+		ASSERT_EQ(mask, BitWordType{ 0xF });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(8);
-		ASSERT_EQ(mask, 0xFF);
+		constexpr BitWordType mask = numBitsToMask(6);
+		ASSERT_EQ(mask, BitWordType{ 0x3f });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(32);
-		ASSERT_EQ(mask, 0xFFFFFFFF);
+		constexpr BitWordType mask = numBitsToMask(8);
+		ASSERT_EQ(mask, BitWordType{ 0xFF });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(33);
-		ASSERT_EQ(mask, 0x1FFFFFFFF);
+		constexpr BitWordType mask = numBitsToMask(32);
+		ASSERT_EQ(mask, BitWordType{ 0xFFFFFFFF });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(63);
-		ASSERT_EQ(mask, 0x7FFFFFFFFFFFFFFF);
+		constexpr BitWordType mask = numBitsToMask(33);
+		ASSERT_EQ(mask, BitWordType{ 0x1FFFFFFFF });
 	}
 
 	{
-		BitWordType mask = bitCountToMask(64);
-		ASSERT_EQ(mask, ~0ull);
-		ASSERT_EQ(mask, 0xFFFFFFFFFFFFFFFF);
+		constexpr BitWordType mask = numBitsToMask(63);
+		ASSERT_EQ(mask, BitWordType{ 0x7FFFFFFFFFFFFFFF });
+	}
+
+	{
+		constexpr BitWordType mask = numBitsToMask(64);
+		ASSERT_EQ(mask, BitWordType{ ~0ull });
+		ASSERT_EQ(mask, BitWordType{ 0xFFFFFFFFFFFFFFFF });
 	}
 }
-
 TEST(BitCountToMask_DeathTest, bitCountToMask_triggerAssert) {
-	ASSERT_DEBUG_DEATH({ int bitCount = 65; bitCountToMask(bitCount); }, "Assertion failed.*");
+	ASSERT_DEBUG_DEATH({ int bitCount = 65; numBitsToMask(bitCount); }, "Assertion failed.*");
 }
 
 class BitSpanFixture : public testing::Test {
@@ -83,25 +82,25 @@ protected:
 	u64 _buffer[100];
 };
 
-TEST_F(BitSpanFixture, clearBits_rangeIsZeroed) {
-    const u32 numWords = 7;
-    const u32 bitCount = 64 * numWords;
-
-    BitSpan span(_buffer, bitCount);
-    span.clearBits();
-
-    for (uint i = 0; i < numWords; ++i)
-        ASSERT_EQ(_buffer[i], BitWordType{ 0 });
-
-	ASSERT_NE(_buffer[numWords + 1], BitWordType{ 0 });
-}
-
-TEST_F(BitSpanFixture, setBits_rangeContainOnes) {
+TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
 	const u32 numWords = 7;
 	const u32 bitCount = 64 * numWords;
 
 	BitSpan span(_buffer, bitCount);
-	span.setBits();
+	span.clearAll();
+
+	for (uint i = 0; i < numWords; ++i)
+		ASSERT_EQ(_buffer[i], BitWordType{ 0 });
+
+	ASSERT_NE(_buffer[numWords + 1], BitWordType{ 0 });
+}
+
+TEST_F(BitSpanFixture, setAll_rangeContainOnes) {
+	const u32 numWords = 7;
+	const u32 bitCount = 64 * numWords;
+
+	BitSpan span(_buffer, bitCount);
+	span.setAll();
 
 	for (uint i = 0; i < numWords; ++i)
 		ASSERT_EQ(_buffer[i], BitWordType{ ~0ull });
@@ -120,7 +119,7 @@ TEST_F(BitSpanFixture, danglingBits_handledBySetAndClear) {
 	{
 		BitWordType zero = BitWordType{ 0 };
 		_buffer[numWords] = Default;
-		span.clearBits();
+		span.clearAll();
 
 		for (uint i = 0; i < numWords; ++i)
 			ASSERT_EQ(_buffer[i], zero);
@@ -132,7 +131,7 @@ TEST_F(BitSpanFixture, danglingBits_handledBySetAndClear) {
 	{
 		BitWordType Ones = BitWordType{ ~0ull };
 		_buffer[numWords] = Default;
-		span.setBits();
+		span.setAll();
 
 		for (uint i = 0; i < numWords; ++i)
 			ASSERT_EQ(_buffer[i], Ones);
@@ -148,8 +147,8 @@ TEST_F(BitSpanFixture, ctor_zeroSize) {
 	meta::fill_container(_buffer, Default);
 
 	BitSpan span(_buffer, 0);
-	span.setBits();
-	span.clearBits();
+	span.setAll();
+	span.clearAll();
 
 	ASSERT_EQ(_buffer[0], Default);
 	ASSERT_EQ(_buffer[1], Default);
@@ -158,14 +157,14 @@ TEST_F(BitSpanFixture, ctor_zeroSize) {
 TEST_F(BitSpanFixture, only_14_bits) {
 	const BitWordType Default = 0xBEBEBEBEBEBEBEBE;
 	meta::fill_container(_buffer, Default);
-	
+
 	BitSpan span(_buffer, 14);
-	const BitWordType danglingMask = (static_cast<BitWordType>(1) << 14) - 1;
+	const BitWordType danglingMask = numBitsToMask(14);
 
-	span.setBits();
-	span.clearBits();
+	span.setAll();
+	span.clearAll();
 
-	ASSERT_EQ(_buffer[0], (Default &~danglingMask));
+	ASSERT_EQ(_buffer[0], (Default & ~danglingMask));
 	ASSERT_EQ(_buffer[1], Default);
 }
 
@@ -175,9 +174,9 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 
 	{
 		BitSpan span(_buffer, 63);
-		const BitWordType danglingMask = (static_cast<BitWordType>(1) << 63) - 1;
-		span.setBits();
-		span.clearBits();
+		const BitWordType danglingMask = numBitsToMask(63);
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], (Default & ~danglingMask));
 		ASSERT_EQ(_buffer[1], Default);
@@ -185,8 +184,8 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 64);
-		span.setBits();
-		span.clearBits();
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], 0u);
 		ASSERT_EQ(_buffer[1], Default);
@@ -194,9 +193,9 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 65);
-		const BitWordType danglingMask = (static_cast<BitWordType>(1) << 1) - 1;
-		span.setBits();
-		span.clearBits();
+		const BitWordType danglingMask = numBitsToMask(65 % 64);
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], 0u);
 		ASSERT_EQ(_buffer[1], (Default & ~danglingMask));
@@ -204,9 +203,9 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 127);
-		const BitWordType danglingMask = (static_cast<BitWordType>(1) << 63) - 1;
-		span.setBits();
-		span.clearBits();
+		const BitWordType danglingMask = numBitsToMask(127 % 64);
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], 0u);
 		ASSERT_EQ(_buffer[1], (Default & ~danglingMask));
@@ -215,8 +214,8 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 128);
-		span.setBits();
-		span.clearBits();
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], 0u);
 		ASSERT_EQ(_buffer[1], 0u);
@@ -225,9 +224,9 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 129);
-		const BitWordType danglingMask = (static_cast<BitWordType>(1) << 1) - 1;
-		span.setBits();
-		span.clearBits();
+		const BitWordType danglingMask = numBitsToMask(129 % 64);
+		span.setAll();
+		span.clearAll();
 
 		ASSERT_EQ(_buffer[0], 0u);
 		ASSERT_EQ(_buffer[1], 0u);
@@ -236,22 +235,35 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 }
 
-TEST_F(BitSpanFixture, largeSpan) {
+TEST_F(BitSpanFixture, functionality_canHandleLargeSpan452003bits) {
+	const u32 numBits = 452003;
+	const u32 LastElement = numBits / 64;
+	u64 largeBuffer[LastElement + 1];
 	const BitWordType Default = 0xFBFBFBFBFBFBFBFB;
-	meta::fill_container(_buffer, Default);
+	meta::fill_container(largeBuffer, Default);
 
+	BitSpan span(largeBuffer, numBits);
+	span.setAll();
+	uint i = 0;
+	const BitWordType DanglingOne = (Default & ~numBitsToMask(numBits % 64)) | (BitWordType{ ~0ull } &numBitsToMask(numBits % 64));
+	const BitWordType DanglingZero = (Default & ~numBitsToMask(numBits % 64)) | (BitWordType{ 0 } &numBitsToMask(numBits % 64));
+	for (auto value : largeBuffer)
 	{
-		BitSpan span(_buffer, 100 * 64);
-		const BitWordType danglingMask = (static_cast<BitWordType>(1) << 63) - 1;
-		
-		span.setBits();
-		for (auto value : _buffer)
+		if (i++ < LastElement)
 			ASSERT_EQ(value, BitWordType{ ~0ull });
+		else
+			ASSERT_EQ(value, DanglingOne);
 
-		span.clearBits();
-		for (auto value : _buffer)
-			ASSERT_EQ(value, BitWordType{ 0 });
 	}
+
+	i = 0;
+	span.clearAll();
+	for (auto value : largeBuffer)
+		if (i++ < LastElement)
+			ASSERT_EQ(value, BitWordType{ 0 });
+		else
+			ASSERT_EQ(value, DanglingZero);
+
 }
 
 }

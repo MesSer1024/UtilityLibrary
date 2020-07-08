@@ -8,6 +8,8 @@ workspace "CppUtilities"
   configurations { "Debug", "Release", "Final" }
   cppdialect "C++17"
   platforms { "Static", "DLL" }
+  warnings "Extra"
+  disablewarnings { "4100" } -- unused parameter value (input to function)
 
   -- setup the different build configurations
   filter { "platforms:Static" }

@@ -1,3 +1,4 @@
+// copyright Daniel Dahlkvist (c) 2020
 #pragma once
 
 #include <Core/Platform.h>
@@ -11,7 +12,7 @@ namespace ddahlkvist
 using BitWordType = u64;
 constexpr u32 BitsInWord = sizeof(BitWordType) * 8;
 
-constexpr BitWordType bitCountToMask(u32 numBits)
+constexpr BitWordType numBitsToMask(u32 numBits)
 {
 	DD_ASSERT(numBits <= BitsInWord);
 
@@ -25,44 +26,46 @@ constexpr BitWordType bitCountToMask(u32 numBits)
 }
 
 
-//
-//struct BitRangeZipper final
-//{
-//	BitRangeZipper(void* __restrict data, void* __restrict data2, u32 bitCount)
-//		: _data(reinterpret_cast<BitWordType*>(data))
-//		, _data2(reinterpret_cast<BitWordType*>(data2))
-//		, _bitCount(bitCount)
-//		, _dangling(_bitCount % 64 != 0)
-//		, _iterations(static_cast<u16>(_bitCount / 64))
-//	{
-//	}
-//
-//	template<typename TemplateEachWordAction, typename TemplateDanglingWordAction>
-//	inline void foreachWord(TemplateEachWordAction&& action, TemplateDanglingWordAction&& danglingAction) noexcept {
-//		auto it1 = _data;
-//		auto it2 = _data2;
-//		auto end = it1 + _iterations;
-//		while (it1 != end)
-//		{
-//			*it1 = action(*it1, *it2);
-//			it1++;
-//			it2++;
-//		}
-//
-//		if (_dangling)
-//		{
-//			auto mask = bitCountToMask(_bitCount);
-//			*it1 = danglingAction(*it1, *it2, mask);
-//		}
-//	}
-//
-//private:
-//	BitWordType* __restrict _data;
-//	BitWordType* __restrict _data2;
-//	u32 _bitCount;
-//	u16 _dangling;
-//	u16 _iterations;
-//};
+// utility class for being able to perform actions on two different "range of bits"
+struct BitRangeZipper final
+{
+	BitRangeZipper(void* __restrict data, void* __restrict data2, u32 bitCount)
+		: _data(reinterpret_cast<BitWordType*>(data))
+		, _data2(reinterpret_cast<BitWordType*>(data2))
+		, _bitCount(bitCount)
+		, _danglingMask(numBitsToMask(bitCount % 64))
+		, _iterations(static_cast<u16>(bitCount / 64))
+	{
+	}
+
+	// examples:
+	// auto operatorOrEq = [](auto& a, auto b) -> BitWordType { a |= b; }
+	// auto danglingOrEq = [](auto& a, auto b, auto mask) -> BitWordType { return a = ((a|b) & mask) | (a & ~mask); }
+	// zipper.foreachWord(operatorOrEq, danglingOrEq);
+	template<typename WordFunctor, typename DanglingWordFunctor>
+	inline void foreachWord(WordFunctor&& func, DanglingWordFunctor&& danglingFunc) noexcept {
+		auto it1 = _data;
+		auto it2 = _data2;
+		auto end = it1 + _iterations;
+
+		while (it1 != end)
+		{
+			func(*it1, *it2);
+			it1++;
+			it2++;
+		}
+
+		if (auto mask = numBitsToMask(_bitCount % BitsInWord))
+			danglingFunc(*it1, *it2, mask);
+	}
+
+private:
+	BitWordType* __restrict _data;
+	BitWordType* __restrict _data2;
+	BitWordType _danglingMask;
+	u32 _bitCount;
+	u16 _iterations;
+};
 
 // provides bit-wise commands on top of range of bytes that it does not own memory for
 class BitSpan final
@@ -72,10 +75,10 @@ public:
 		: _data(reinterpret_cast<BitWordType*>(data))
 		, _numBits(bitCount)
 		, _numWords(_numBits / BitsInWord)
-		, _danglingMask(bitCountToMask(_numBits % BitsInWord) )
+		, _danglingMask(numBitsToMask(_numBits % BitsInWord) )
 	{ }
 
-	inline void clearBits()
+	inline void clearAll()
 	{
 		auto it = _data;
 		auto end = _data + _numWords;
@@ -87,12 +90,13 @@ public:
 
 		if (_danglingMask)
 		{
-			BitWordType dangling = *end & ~_danglingMask;
+			const BitWordType part2 = (*end & ~_danglingMask);
+			const BitWordType dangling = part2;
 			*end = dangling;
 		}
 	}
 
-	inline void setBits()
+	inline void setAll()
 	{
 		auto it = _data;
 		auto end = _data + _numWords;
@@ -104,60 +108,12 @@ public:
 
 		if (_danglingMask)
 		{
-			BitWordType dangling = (*end & ~_danglingMask) | (Ones & _danglingMask);
-			*end = dangling;
+			const BitWordType part1 = (Ones & _danglingMask);
+			const BitWordType part2 = (*end & ~_danglingMask);
+			const BitWordType dangling = part1 | part2;
+			*end = dangling; 
 		}
 	}
-
-	//void foo()
-	//{
-	//	u64 sadf[5];
-	//	BitRangeZipper zipper(sadf, sadf, 137);
-	//}
-
-	/*
-	template<class Action>
-	void foreachSetBit(Action&& action)
-	{
-		BitWordType* wordPtr = reinterpret_cast<BitWordType*>(_data);
-
-		int globalBitIndex = 0;
-		int bitIndex;
-		for (u32 it = 0; it < _numWords; ++it)
-		{
-			BitWordType value = *wordPtr;
-			bitIndex = globalBitIndex;
-			while (value != 0u)
-			{
-				const bool smallestBitIsSet = value & 1u;
-				if (smallestBitIsSet)
-					action(bitIndex);
-
-				value >>= 1u;
-				bitIndex++;
-			}
-
-			globalBitIndex += BitsInWord;
-			wordPtr++;
-		}
-
-		if (_danglingMask != 0)
-		{
-			const BitWordType mask = bitCountToMask(_danglingMask);
-			BitWordType value = (*wordPtr) & mask;
-			bitIndex = globalBitIndex;
-			while (value != 0u)
-			{
-				const bool smallestBitIsSet = value & 1u;
-				if (smallestBitIsSet)
-					action(bitIndex);
-
-				value >>= 1u;
-				bitIndex++;
-			}
-
-		}
-	}*/
 
 private:
 	BitWordType* _data;
