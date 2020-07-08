@@ -48,18 +48,18 @@ constexpr BitWordType danglingPart(u32 numBits)
 //		const BitWordType mask = danglingPart(numBitsToCompare);
 //		return (a & mask) == (b & mask);
 //	}
-//}
+}
 
 // utility class for being able to perform actions on two different "range of bits"
 class BitRangeZipper final
 {
 public:
-	BitRangeZipper(void* __restrict data, void* __restrict data2, u32 bitCount)
-		: _data(reinterpret_cast<BitWordType*>(data))
-		, _data2(reinterpret_cast<BitWordType*>(data2))
-		, _bitCount(bitCount)
-		, _danglingMask(bitword::danglingPart(bitCount))
-		, _iterations(static_cast<u16>(bitCount / BitsInWord))
+	BitRangeZipper(void* __restrict lhs, void* __restrict rhs, u32 numBits)
+		: _lhs(reinterpret_cast<BitWordType*>(lhs))
+		, _rhs(reinterpret_cast<BitWordType*>(rhs))
+		, _danglingMask((numBits% BitsInWord != 0) ? bitword::danglingPart(numBits) : ~0ull)
+		, _numWords((numBits / BitsInWord) + (numBits % BitsInWord != 0))
+		, _numBits(numBits)
 	{
 	}
 
@@ -67,29 +67,27 @@ public:
 	// auto operatorOREq = [](auto& a, auto b) -> BitWordType { a |= b; }
 	// auto danglingOREq = [](auto& a, auto b, auto mask) -> BitWordType { return a = ((a|b) & mask) | (a & ~mask); }
 	// zipper.foreachWord(operatorOrEq, danglingOrEq);
-	template<typename WordAction, typename DanglingWordAction>
-	inline void foreachWord(WordAction&& func, DanglingWordAction&& danglingFunc) noexcept {
-		auto it1 = _data;
-		auto it2 = _data2;
-		auto end = it1 + _iterations;
+	template<class WordAction>
+	inline void foreachWord(WordAction&& action) noexcept {
+		auto lhs = _lhs;
+		auto rhs = _rhs;
+		auto end = lhs + _numWords;
 
-		while (it1 != end)
+		while (lhs != end)
 		{
-			func(*it1, *it2);
-			it1++;
-			it2++;
+			action(*lhs, *rhs);
+			lhs++;
+			rhs++;
 		}
-
-		if (_danglingMask)
-			danglingFunc(*it1, *it2, _danglingMask);
 	}
 
 private:
-	BitWordType* __restrict _data;
-	BitWordType* __restrict _data2;
+	BitWordType* __restrict _lhs;
+	BitWordType* __restrict _rhs;
 	BitWordType _danglingMask;
-	u32 _bitCount;
-	u16 _iterations;
+
+	const u32 _numWords;
+	const u32 _numBits;
 };
 
 // BitSpan provide functionality to reason about a range of bits

@@ -294,7 +294,7 @@ TEST_F(BitSpanFixture, foreachWord_invokedCorrectly) {
 		ASSERT_EQ(output[i], input[i]);
 }
 
-TEST_F(BitSpanFixture, operator_OREQ) {
+//TEST_F(BitSpanFixture, operator_OREQ) {
 	//const u32 NumWords = 15;
 	//const u32 NumBits = NumWords * BitsInWord - 17;
 	//BitWordType buffer1[NumWords];
@@ -311,7 +311,7 @@ TEST_F(BitSpanFixture, operator_OREQ) {
 	//u32 it = 0;
 	//span1.foreachWord([&buffer1, &it](auto a) { buffer1[it++] == a; }
 
-}
+//}
 //
 //
 //
