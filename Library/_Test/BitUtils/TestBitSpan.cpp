@@ -483,6 +483,77 @@ TEST_F(BitSpanFixture, foreachSetBit_tresholds)
 	}
 }
 
+TEST_F(BitSpanFixture, foreachSetBit_withReportedIndexOffset)
+{
+	BitWordType one = 1;
+	const u32 IndexOffset = 17;
+	{
+		const u32 ExpectedBitIndex = 0;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 14;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 33;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 63 - IndexOffset;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 64 - IndexOffset;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 55;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 63;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+}
+TEST_F(BitSpanFixture, foreachSetBit_withReportedIndexOffsetCanBeReallyBig)
+{
+	BitWordType one = 1;
+	const u32 IndexOffset = 8181818;
+	{
+		const u32 ExpectedBitIndex = 0;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 14;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 33;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 55;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+	{
+		const u32 ExpectedBitIndex = 63;
+		BitWordType data = one << ExpectedBitIndex;
+		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
+	}
+}
+
 #pragma warning( push )
 #pragma warning( disable : 4293 ) // warning C4293: '<<': shift count negative or too big, undefined behavior
 
