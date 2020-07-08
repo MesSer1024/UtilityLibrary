@@ -17,9 +17,6 @@ protected:
 
 	void TearDown() override {
 	}
-
-	BitWordType _lhs[40];
-	BitWordType _rhs[40];
 };
 
 static_assert(sizeof(BitWordType) == 8);
@@ -29,6 +26,9 @@ TEST_F(BitRangeZipperFixture, foreachWord_countInvocations)
 	const u32 NumWords = 10;
 	const u32 BitCount = NumWords * BitsInWord;
 
+	BitWordType _lhs[NumWords];
+	BitWordType _rhs[NumWords];
+
 	BitRangeZipper zipper(_lhs, _rhs, BitCount);
 
 	u32 wordCounter = 0;
@@ -37,48 +37,48 @@ TEST_F(BitRangeZipperFixture, foreachWord_countInvocations)
 	ASSERT_EQ(wordCounter, NumWords);
 }
 
-//TEST_F(BitRangeZipperFixture, foreachWord_countInvocationsDanglingBits)
-//{
-//	const u32 ExpectedFullWords = 10;
-//	const u32 bitCount = (64 * ExpectedFullWords) + 7;
-//	BitRangeZipper zipper(_lhs, _rhs, bitCount);
-//
-//	u32 numFullWords = 0;
-//	u32 numDangling = 0;
-//	auto eachWordAction = [&numFullWords](auto a, auto b) {numFullWords++;  };
-//	auto danglingWordAction = [&numDangling](auto a, auto b, auto mask) {numDangling++;  };
-//	zipper.foreachWord(eachWordAction, danglingWordAction);
-//
-//	ASSERT_EQ(numFullWords, ExpectedFullWords);
-//	ASSERT_EQ(numDangling, 1u);
-//}
-//
-//TEST_F(BitRangeZipperFixture, foreachWord_paramsProvidedInLinearOrder)
-//{
-//	const u32 ExpectedFullWords = 10;
-//	const u32 bitCount = 64 * ExpectedFullWords + 1;
-//	BitRangeZipper zipper(_lhs, _rhs, bitCount);
-//	u32 counter = 0;
-//	BitWordType valuesFromA[ExpectedFullWords + 1];
-//	BitWordType valuesFromB[ExpectedFullWords + 1];
-//
-//	meta::iota_container(_lhs, 0);
-//	meta::iota_container(_rhs, 1000);
-//
-//	auto eachWordAction = [this, &counter, &valuesFromA, &valuesFromB](auto a, auto b) { valuesFromA[counter] = a; valuesFromB[counter] = b; counter++; };
-//	auto danglingWordAction = [this, &counter, &valuesFromA, &valuesFromB](auto a, auto b, auto mask) { valuesFromA[counter] = a; valuesFromB[counter] = b; counter++; };
-//
-//	zipper.foreachWord(eachWordAction, danglingWordAction);
-//
-//	ASSERT_EQ(counter, ExpectedFullWords + 1);
-//
-//	for (uint i = 0; i < ExpectedFullWords + 1; ++i)
-//	{
-//		ASSERT_EQ(valuesFromA[i], _lhs[i]);
-//		ASSERT_EQ(valuesFromB[i], _rhs[i]);
-//	}
-//}
-//
+TEST_F(BitRangeZipperFixture, foreachWord_countInvocationsWithDanglingBits)
+{
+	const u32 NumWords = 10;
+	const u32 BitCount = NumWords * BitsInWord - 17;
+
+	BitWordType _lhs[NumWords];
+	BitWordType _rhs[NumWords];
+
+	BitRangeZipper zipper(_lhs, _rhs, BitCount);
+
+	u32 wordCounter = 0;
+	zipper.foreachWord([&wordCounter](auto a, auto b) { wordCounter++; });
+
+	ASSERT_EQ(wordCounter, NumWords);
+}
+
+TEST_F(BitRangeZipperFixture, foreachWord_paramsProvidedInLinearOrder)
+{
+	const u32 NumWords = 10;
+	const u32 BitCount = NumWords * BitsInWord - 17;
+
+	BitWordType inputA[NumWords];
+	BitWordType inputB[NumWords];
+	BitWordType outputA[NumWords];
+	BitWordType outputB[NumWords];
+	BitRangeZipper zipper(inputA, inputB, BitCount);
+
+	meta::iota_container(inputA, 0);
+	meta::iota_container(inputB, 1000);
+
+	uint it = 0;
+	zipper.foreachWord([&it, &outputA, &outputB](auto a, auto b) { outputA[it] = a; outputB[it] = b; it++; });
+
+	ASSERT_EQ(it, NumWords);
+
+	for (uint i = 0; i < NumWords; ++i)
+	{
+		ASSERT_EQ(outputA[i], inputA[i]);
+		ASSERT_EQ(outputB[i], inputB[i]);
+	}
+}
+
 //TEST_F(BitRangeZipperFixture, foreachWord_valuesCanBeReferenced)
 //{
 //	const u32 ExpectedFullWords = 10;
