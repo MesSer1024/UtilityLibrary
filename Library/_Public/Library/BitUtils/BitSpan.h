@@ -9,7 +9,6 @@ namespace ddahlkvist
 {
 
 using BitWordType = u64;
-constexpr u32 BitsInWord = sizeof(BitWordType) * 8;
 
 namespace bitword
 {
@@ -17,9 +16,27 @@ namespace bitword
 constexpr BitWordType Zero = BitWordType{ 0 };
 constexpr BitWordType Ones = BitWordType{ ~0ull };
 
-constexpr BitWordType danglingPart(u32 numBits)
+constexpr u32 NumBitsInWord = sizeof(BitWordType) * 8;
+
+constexpr bool hasDanglingPart(u32 numBits)
 {
-	numBits = numBits % BitsInWord;
+	return (numBits % NumBitsInWord != 0);
+}
+
+constexpr u32 getNumWords(u32 numBits) {
+	const u32 numWords = numBits / NumBitsInWord + (numBits % NumBitsInWord != 0);
+	return numWords;
+}
+
+constexpr u32 getNumBytesRequiredToRepresentWordBasedBitBuffer(u32 numBits) {
+	const u32 numWords = getNumWords(numBits);
+	const u32 numBytes = numWords * sizeof(BitWordType);
+	return numBytes;
+}
+
+constexpr BitWordType getDanglingPart(u32 numBits)
+{
+	numBits = numBits % NumBitsInWord;
 
 	BitWordType value = 1;
 	value <<= numBits;
@@ -57,8 +74,8 @@ public:
 	BitRangeZipper(void* __restrict lhs, void* __restrict rhs, u32 numBits)
 		: _lhs(reinterpret_cast<BitWordType*>(lhs))
 		, _rhs(reinterpret_cast<BitWordType*>(rhs))
-		, _danglingMask((numBits% BitsInWord != 0) ? bitword::danglingPart(numBits) : ~0ull)
-		, _numWords((numBits / BitsInWord) + (numBits % BitsInWord != 0))
+		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
+		, _numWords(bitword::getNumWords(numBits))
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
@@ -105,10 +122,14 @@ private:
 class BitSpan final
 {
 public:
+	BitSpan(const BitSpan&) = delete;
+	void operator=(const BitSpan&) = delete;
+	void operator=(BitSpan&&) = delete;
+
 	inline BitSpan(void* data, u32 numBits)
 		: _data(reinterpret_cast<BitWordType*>(data))
-		, _danglingMask((numBits% BitsInWord != 0) ? bitword::danglingPart(numBits) : ~0ull)
-		, _numWords((numBits / BitsInWord) + (numBits % BitsInWord != 0))
+		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
+		, _numWords(bitword::getNumWords(numBits))
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
@@ -123,12 +144,12 @@ public:
 
 	inline void clearAll() noexcept
 	{
-		foreachWord([](auto& a) { a = BitWordType{ 0 }; });
+		foreachWord([](auto& a) { a = bitword::Zero; });
 	}
 
 	inline void setAll() noexcept
 	{
-		foreachWord([](auto& a) { a = BitWordType{ ~0ull }; });
+		foreachWord([](auto& a) { a = bitword::Ones; });
 
 		clearDanglingBits();
 	}
@@ -145,24 +166,57 @@ public:
 		}
 	}
 
-	void operator|=(const BitSpan& other)
+	inline bool operator==(const BitSpan& other)
 	{
+		DD_ASSERT(_numBits == other._numBits);
+
+		auto it = _data;
+		auto otherIt = other._data;
+		const auto end = _data + (_danglingMask ? _numWords - 1 : _numWords);
+
+		while (it != end)
+		{
+			if (*it != *otherIt)
+				return false;
+
+			it++;
+			otherIt++;
+		}
+
+		if (_danglingMask)
+		{
+			BitWordType value = *it ^ *otherIt;
+			value &= _danglingMask;
+			return value == 0;
+		}
+
+		return true;
+	}
+
+	inline void operator|=(const BitSpan& other)
+	{
+		DD_ASSERT(_numBits == other._numBits);
+
 		BitRangeZipper zipper(_data, other._data, _numBits);
 		zipper.foreachWord([](auto& a, auto b) { a |= b; });
 
 		clearDanglingBits();
 	}
 
-	void operator&=(const BitSpan& other)
+	inline void operator&=(const BitSpan& other)
 	{
+		DD_ASSERT(_numBits == other._numBits);
+
 		BitRangeZipper zipper(_data, other._data, _numBits);
 		zipper.foreachWord([](auto& a, auto b) { a &= b; });
 
 		clearDanglingBits();
 	}
 
-	void operator^=(const BitSpan& other)
+	inline void operator^=(const BitSpan& other)
 	{
+		DD_ASSERT(_numBits == other._numBits);
+
 		BitRangeZipper zipper(_data, other._data, _numBits);
 		zipper.foreachWord([](auto& a, auto b) { a ^= b; });
 

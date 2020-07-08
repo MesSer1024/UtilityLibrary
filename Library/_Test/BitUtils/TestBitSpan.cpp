@@ -13,63 +13,63 @@ static_assert(sizeof(BitWordType) == sizeof(u64));
 TEST(BitCountToMaskTest, danglingMaskFromBitCount_validateCalculations) {
 	using namespace bitword;
 	{
-		constexpr BitWordType mask = bitword::danglingPart(0);
+		constexpr BitWordType mask = bitword::getDanglingPart(0);
 		ASSERT_EQ(mask, BitWordType{ 0u });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(1);
+		constexpr BitWordType mask = bitword::getDanglingPart(1);
 		ASSERT_EQ(mask, BitWordType{ 1u });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(2);
+		constexpr BitWordType mask = bitword::getDanglingPart(2);
 		ASSERT_EQ(mask, BitWordType{ 0b11 });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(3);
+		constexpr BitWordType mask = bitword::getDanglingPart(3);
 		ASSERT_EQ(mask, BitWordType{ 0b111 });
 	}
 	{
-		constexpr BitWordType mask = bitword::danglingPart(4);
+		constexpr BitWordType mask = bitword::getDanglingPart(4);
 		ASSERT_EQ(mask, BitWordType{ 0xF });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(6);
+		constexpr BitWordType mask = bitword::getDanglingPart(6);
 		ASSERT_EQ(mask, BitWordType{ 0x3f });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(8);
+		constexpr BitWordType mask = bitword::getDanglingPart(8);
 		ASSERT_EQ(mask, BitWordType{ 0xFF });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(32);
+		constexpr BitWordType mask = bitword::getDanglingPart(32);
 		ASSERT_EQ(mask, BitWordType{ 0xFFFFFFFF });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(33);
+		constexpr BitWordType mask = bitword::getDanglingPart(33);
 		ASSERT_EQ(mask, BitWordType{ 0x1FFFFFFFF });
 	}
 
 	{
-		constexpr BitWordType mask = bitword::danglingPart(63);
+		constexpr BitWordType mask = bitword::getDanglingPart(63);
 		ASSERT_EQ(mask, BitWordType{ 0x7FFFFFFFFFFFFFFF });
 	}
 	{
-		constexpr BitWordType mask = bitword::danglingPart(64);
+		constexpr BitWordType mask = bitword::getDanglingPart(64);
 		ASSERT_EQ(mask, BitWordType{ 0 });
 	}
 	{
-		constexpr BitWordType mask = bitword::danglingPart(65);
+		constexpr BitWordType mask = bitword::getDanglingPart(65);
 		ASSERT_EQ(mask, BitWordType{ 1 });
 	}
 	{
-		constexpr BitWordType mask = bitword::danglingPart(130);
+		constexpr BitWordType mask = bitword::getDanglingPart(130);
 		ASSERT_EQ(mask, BitWordType{ 0b11 });
 	}
 }
@@ -87,36 +87,36 @@ protected:
 
 TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
 	const u32 NumWords = 7;
-	const u32 BitCount = BitsInWord * NumWords;
+	const u32 BitCount = bitword::NumBitsInWord * NumWords;
 	BitWordType buffer[NumWords];
 
 	BitSpan span(buffer, BitCount);
 	span.clearAll();
 
 	for (uint i = 0; i < NumWords; ++i)
-		ASSERT_EQ(buffer[i], BitWordType{ 0 });
+		ASSERT_EQ(buffer[i], bitword::Zero);
 
 	ASSERT_NE(buffer[NumWords + 1], BitWordType{ 0 });
 }
 
 TEST_F(BitSpanFixture, setAll_rangeContainOnes) {
 	const u32 NumWords = 7;
-	const u32 BitCount = BitsInWord * NumWords;
+	const u32 BitCount = bitword::NumBitsInWord * NumWords;
 	BitWordType buffer[NumWords];
 
 	BitSpan span(buffer, BitCount);
 	span.setAll();
 
 	for (uint i = 0; i < NumWords; ++i)
-		ASSERT_EQ(buffer[i], BitWordType{ ~0ull });
+		ASSERT_EQ(buffer[i], bitword::Ones);
 
-	ASSERT_NE(buffer[NumWords + 1], BitWordType{ ~0ull });
+	ASSERT_NE(buffer[NumWords + 1], bitword::Ones);
 }
 
 TEST_F(BitSpanFixture, danglingBits_handledBySetAndClear) {
 	const u32 NumWords = 7;
-	const u32 BitCount = BitsInWord * NumWords - 37;
-	const BitWordType danglingMask = bitword::danglingPart(BitCount);
+	const u32 BitCount = bitword::NumBitsInWord * NumWords - 37;
+	const BitWordType danglingMask = bitword::getDanglingPart(BitCount);
 	const BitWordType Default = 0xBEBEBEBEBEBEBEBE;
 
 	BitWordType buffer[NumWords];
@@ -165,7 +165,7 @@ TEST_F(BitSpanFixture, zeroFullWords_only14bits) {
 	meta::fill_container(buffer, Default);
 
 	BitSpan span(buffer, 14);
-	const BitWordType danglingMask = bitword::danglingPart(14);
+	const BitWordType danglingMask = bitword::getDanglingPart(14);
 
 	span.setAll();
 	span.clearAll();
@@ -179,7 +179,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 	BitWordType buffer[4];
 
 	{
-		const u32 BitCount = 1 * BitsInWord - 1;
+		const u32 BitCount = 1 * bitword::NumBitsInWord - 1;
 		BitSpan span(buffer, BitCount);
 		
 		meta::fill_container(buffer, Default);
@@ -190,7 +190,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 		ASSERT_EQ(buffer[2], Default);
 	}
 	{
-		const u32 BitCount = 1 * BitsInWord;
+		const u32 BitCount = 1 * bitword::NumBitsInWord;
 		BitSpan span(buffer, BitCount);
 
 		meta::fill_container(buffer, Default);
@@ -201,7 +201,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 		ASSERT_EQ(buffer[2], Default);
 	}
 	{
-		const u32 BitCount = 1 * BitsInWord + 1;
+		const u32 BitCount = 1 * bitword::NumBitsInWord + 1;
 		BitSpan span(buffer, BitCount);
 
 		meta::fill_container(buffer, Default);
@@ -213,7 +213,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 	}
 
 	{
-		const u32 BitCount = 2 * BitsInWord - 1;
+		const u32 BitCount = 2 * bitword::NumBitsInWord - 1;
 		BitSpan span(buffer, BitCount);
 
 		meta::fill_container(buffer, Default);
@@ -224,7 +224,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 		ASSERT_EQ(buffer[2], Default);
 	}
 	{
-		const u32 BitCount = 2 * BitsInWord;
+		const u32 BitCount = 2 * bitword::NumBitsInWord;
 		BitSpan span(buffer, BitCount);
 
 		meta::fill_container(buffer, Default);
@@ -235,7 +235,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 		ASSERT_EQ(buffer[2], Default);
 	}
 	{
-		const u32 BitCount = 2 * BitsInWord + 1;
+		const u32 BitCount = 2 * bitword::NumBitsInWord + 1;
 		BitSpan span(buffer, BitCount);
 
 		meta::fill_container(buffer, Default);
@@ -249,7 +249,7 @@ TEST_F(BitSpanFixture, tresholds_clearValidateBehaviorAroundWordSize) {
 
 TEST_F(BitSpanFixture, functionality_canHandleLargeSpan) {
 	const u32 NumWords = 8591;
-	const u32 NumBits = NumWords * BitsInWord - 13;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 13;
 	const BitWordType Default = 0xFBFBFBFBFBFBFBFB;
 	
 	BitWordType largeBuffer[NumWords];
@@ -264,7 +264,7 @@ TEST_F(BitSpanFixture, functionality_canHandleLargeSpan) {
 		for (uint i = 0; i < NumWords - 1; ++i)
 			ASSERT_EQ(largeBuffer[i], bitword::Ones);
 
-		ASSERT_EQ(largeBuffer[NumWords - 1], bitword::Ones & bitword::danglingPart(NumBits));
+		ASSERT_EQ(largeBuffer[NumWords - 1], bitword::Ones & bitword::getDanglingPart(NumBits));
 	}
 
 	{
@@ -276,7 +276,7 @@ TEST_F(BitSpanFixture, functionality_canHandleLargeSpan) {
 
 TEST_F(BitSpanFixture, foreachWord_invokedCorrectly) {
 	const u32 NumWords = 30;
-	const u32 BitCount = NumWords * BitsInWord - 1;
+	const u32 BitCount = NumWords * bitword::NumBitsInWord - 1;
 
 	BitWordType input[NumWords];
 	BitWordType output[NumWords];
@@ -296,7 +296,7 @@ TEST_F(BitSpanFixture, foreachWord_invokedCorrectly) {
 
 TEST_F(BitSpanFixture, operator_OREQ) {
 	const u32 NumWords = 15;
-	const u32 NumBits = NumWords * BitsInWord - 17;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 17;
 	BitWordType lhs[NumWords];
 	BitWordType rhs[NumWords];
 
@@ -315,7 +315,7 @@ TEST_F(BitSpanFixture, operator_OREQ) {
 
 TEST_F(BitSpanFixture, operator_ANDEQ) {
 	const u32 NumWords = 15;
-	const u32 NumBits = NumWords * BitsInWord - 17;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 17;
 	BitWordType lhs[NumWords];
 	BitWordType rhs[NumWords];
 
@@ -334,7 +334,7 @@ TEST_F(BitSpanFixture, operator_ANDEQ) {
 
 TEST_F(BitSpanFixture, operator_XOREQ) {
 	const u32 NumWords = 15;
-	const u32 NumBits = NumWords * BitsInWord - 17;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 17;
 	BitWordType lhs[NumWords];
 	BitWordType rhs[NumWords];
 
@@ -351,10 +351,78 @@ TEST_F(BitSpanFixture, operator_XOREQ) {
 		ASSERT_EQ(lhs[i], DefaultLHS ^ rhs[i]);
 }
 
-//
-//
-//TEST_F(BitSpanFixture, operatorEQ_pointersRemains) {
-//}
+TEST_F(BitSpanFixture, operators_rhsIsUnmodified) {
+	const u32 NumWords = 15;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 17;
+
+	BitWordType lhsBuffer[NumWords];
+	BitWordType rhsBuffer[NumWords];
+	BitWordType rhsBufferCopy[NumWords];
+
+	const BitWordType DefaultLHS = 0xFF;
+	meta::fill_container(lhsBuffer, DefaultLHS);
+	meta::fill_container(rhsBuffer, BitWordType{ 0xbebebebe });
+
+	BitSpan lhs(lhsBuffer, NumBits);
+	BitSpan rhs(rhsBuffer, NumBits);
+
+	memcpy(rhsBufferCopy, rhsBuffer, sizeof(rhsBuffer)); // also copy eventual cleared bits from RHS
+
+	lhs |= rhs;
+	lhs &= rhs;
+	lhs ^= rhs;
+	//lhs = rhs;
+
+	ASSERT_EQ(memcmp(rhsBufferCopy, rhsBuffer, sizeof(rhsBuffer)), 0);
+}
+
+TEST_F(BitSpanFixture, operatorEQ) {
+	const u32 NumWords = 15;
+	const u32 NumBits = NumWords * bitword::NumBitsInWord - 17;
+
+	BitWordType lhsBuffer[NumWords + 1];
+	BitWordType rhsBuffer[NumWords + 1];
+
+	BitSpan lhs(lhsBuffer, NumBits);
+	BitSpan rhs(rhsBuffer, NumBits);
+
+	{
+		meta::fill_container(lhsBuffer, BitWordType{ 0xFF });
+		meta::fill_container(rhsBuffer, BitWordType{ 0xbebebebe });
+
+		ASSERT_FALSE(lhs == rhs);
+	}
+	{
+		meta::fill_container(lhsBuffer, BitWordType{ 0xEAEA });
+		meta::fill_container(rhsBuffer, BitWordType{ 0xEAEA });
+
+		ASSERT_TRUE(lhs == rhs);
+	}
+	{
+		// this entire word is outside of span
+		lhsBuffer[NumWords] = bitword::Ones;
+		rhsBuffer[NumWords] = 12313;
+
+		ASSERT_TRUE(lhs == rhs);
+	}
+	{
+		// parts of this word is outside of span
+		lhsBuffer[NumWords - 1] = bitword::Ones;
+		rhsBuffer[NumWords - 1] = 12313;
+
+		ASSERT_FALSE(lhs == rhs);
+	}
+	{
+		// parts of this word is shared and part is unshared, validate that it only looks at the part that is shared
+		const BitWordType DanglingMask = bitword::getDanglingPart(NumBits);
+		const BitWordType EqualPart = 0xBEBEBEBEBEBEBEBE;
+
+		lhsBuffer[NumWords - 1] = (EqualPart & DanglingMask) | (bitword::Ones & ~DanglingMask);
+		rhsBuffer[NumWords - 1] = (EqualPart & DanglingMask) | (0xabcdabcdabcdabcd & ~DanglingMask);
+
+		ASSERT_TRUE(lhs == rhs);
+	}
+}
 
 
 

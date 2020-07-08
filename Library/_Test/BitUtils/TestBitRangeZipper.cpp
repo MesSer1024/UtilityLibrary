@@ -23,7 +23,7 @@ static_assert(sizeof(BitWordType) == 8);
 TEST_F(BitRangeZipperFixture, foreachWord_countInvocations)
 {
 	const u32 NumWords = 10;
-	const u32 BitCount = NumWords * BitsInWord;
+	const u32 BitCount = NumWords * bitword::NumBitsInWord;
 
 	BitWordType _lhs[NumWords];
 	BitWordType _rhs[NumWords];
@@ -39,7 +39,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_countInvocations)
 TEST_F(BitRangeZipperFixture, foreachWord_countInvocationsWithDanglingBits)
 {
 	const u32 NumWords = 10;
-	const u32 BitCount = NumWords * BitsInWord - 17;
+	const u32 BitCount = NumWords * bitword::NumBitsInWord - 17;
 
 	BitWordType _lhs[NumWords];
 	BitWordType _rhs[NumWords];
@@ -55,7 +55,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_countInvocationsWithDanglingBits)
 TEST_F(BitRangeZipperFixture, foreachWord_paramsProvidedInLinearOrder)
 {
 	const u32 NumWords = 10;
-	const u32 BitCount = NumWords * BitsInWord - 17;
+	const u32 BitCount = NumWords * bitword::NumBitsInWord - 17;
 
 	BitWordType inputA[NumWords];
 	BitWordType inputB[NumWords];
@@ -81,7 +81,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_paramsProvidedInLinearOrder)
 TEST_F(BitRangeZipperFixture, foreachWord_valuesCanBeReferenced)
 {
 	const u32 NumWords = 10;
-	const u32 BitCount = NumWords * BitsInWord - 13;
+	const u32 BitCount = NumWords * bitword::NumBitsInWord - 13;
 
 	BitWordType lhs[NumWords];
 	BitWordType rhs[NumWords];
@@ -111,14 +111,14 @@ TEST_F(BitRangeZipperFixture, foreachWord_validateZeroSizeBehavior)
 TEST_F(BitRangeZipperFixture, foreachWord_validateZeroWordSizeAndDanglingBits)
 {
 	const BitWordType Default = 0xbebebebebe;
-	BitWordType outputA[BitsInWord];
-	BitWordType outputB[BitsInWord];
+	BitWordType outputA[bitword::NumBitsInWord];
+	BitWordType outputB[bitword::NumBitsInWord];
 
 	meta::fill_container(outputA, Default);
 	meta::fill_container(outputB, Default);
 
 	uint it = 0;
-	for (uint i = 0; i < BitsInWord; ++i)
+	for (uint i = 0; i < bitword::NumBitsInWord; ++i)
 	{
 		BitWordType lhs[1] = { bitword::Ones };
 		BitWordType rhs[1] = { bitword::Ones };
@@ -136,18 +136,18 @@ TEST_F(BitRangeZipperFixture, foreachWord_validateZeroWordSizeAndDanglingBits)
 		ASSERT_EQ(it, i + 1);
 	}
 
-	ASSERT_EQ(it, BitsInWord);
+	ASSERT_EQ(it, bitword::NumBitsInWord);
 	for (uint i = 0; i < it; ++i)
 	{
 		const u32 BitCount = (i + 1);
-		if (BitCount == BitsInWord)
+		if (BitCount == bitword::NumBitsInWord)
 		{
 			ASSERT_EQ(outputA[i], bitword::Ones);
 			ASSERT_EQ(outputB[i], bitword::Ones);
 		}
 		else
 		{
-			const BitWordType expected = bitword::Ones & bitword::danglingPart(BitCount);
+			const BitWordType expected = bitword::Ones & bitword::getDanglingPart(BitCount);
 			ASSERT_EQ(outputA[i], expected);
 			ASSERT_EQ(outputB[i], expected);
 		}
@@ -163,7 +163,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_validateTresholdBitCountBehavior)
 	{
 		{ // 63
 			wordCounter = 0;
-			const u32 bitCount = BitsInWord * i + (BitsInWord - 1);
+			const u32 bitCount = bitword::NumBitsInWord * i + (bitword::NumBitsInWord - 1);
 
 			BitRangeZipper zipper(buffer, buffer, bitCount);
 			zipper.foreachWord(eachWordAction);
@@ -172,7 +172,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_validateTresholdBitCountBehavior)
 		}
 		{ // 64
 			wordCounter = 0;
-			const u32 bitCount = BitsInWord * i + (BitsInWord + 0);
+			const u32 bitCount = bitword::NumBitsInWord * i + (bitword::NumBitsInWord + 0);
 
 
 			BitRangeZipper zipper(buffer, buffer, bitCount);
@@ -183,7 +183,7 @@ TEST_F(BitRangeZipperFixture, foreachWord_validateTresholdBitCountBehavior)
 
 		{ // 65
 			wordCounter = 0;
-			const u32 bitCount = BitsInWord * i + (BitsInWord + 1);
+			const u32 bitCount = bitword::NumBitsInWord * i + (bitword::NumBitsInWord + 1);
 
 			BitRangeZipper zipper(buffer, buffer, bitCount);
 			zipper.foreachWord(eachWordAction);
