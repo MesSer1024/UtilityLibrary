@@ -43,6 +43,28 @@ constexpr BitWordType getDanglingPart(u32 numBits)
 	return value;
 }
 
+inline void clearBit(BitWordType& word, u32 bit)
+{
+	BitWordType mask = 1u;
+	mask <<= bit;
+	word &= ~mask;
+}
+
+inline void setBit(BitWordType& word, u32 bit)
+{
+	BitWordType mask = 1u;
+	mask <<= bit;
+	word = (word & ~mask) | mask;
+}
+
+inline bool getBit(BitWordType word, u32 bit)
+{
+	BitWordType mask = 1u;
+	mask <<= bit;
+	
+	return word & mask;
+}
+
 template<class BitAction>
 void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
 {
@@ -58,12 +80,6 @@ void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOff
 	}
 }
 
-//
-//	inline bool equals(BitWordType a, BitWordType b, u32 numBitsToCompare)
-//	{
-//		const BitWordType mask = danglingPart(numBitsToCompare);
-//		return (a & mask) == (b & mask);
-//	}
 }
 
 // utility class for being able to perform actions on two different "range of bits"
@@ -152,6 +168,30 @@ public:
 		foreachWord([](auto& a) { a = bitword::Ones; });
 
 		clearDanglingBits();
+	}
+
+	inline u32 countSetBits() {
+		clearDanglingBits();
+
+		u64 counter = 0;
+		foreachWord([&counter](auto a) { counter += __popcnt64(a); });
+		return static_cast<u32>(counter);
+	}
+
+	inline void setBit(u32 bit)
+	{
+		DD_ASSERT(bit < _numBits);
+
+		auto& word = _data[bit / NumBitsInWord];
+		bitword::setBit(word, bit % NumBitsInWord);
+	}
+
+	inline bool getBit(u32 bit) const
+	{
+		DD_ASSERT(bit < _numBits);
+
+		auto word = _data[bit / NumBitsInWord];
+		return bitword::getBit(word, bit % NumBitsInWord);
 	}
 
 	template<typename WordAction>

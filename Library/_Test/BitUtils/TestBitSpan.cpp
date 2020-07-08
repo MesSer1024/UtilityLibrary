@@ -701,7 +701,7 @@ TEST_F(BitSpanFixture, foreachSetBit_notInvokedForDanglingBitsNotZeroWord)
 
 TEST_F(BitSpanFixture, foreachSetBit_testPerformanceManyObjects)
 {
-	const u32 BitCount = 899101;
+	const u32 BitCount = 113101;
 	const u32 WordCount = bitword::getNumWordsRequired(BitCount);
 	BitWordType buffer[WordCount] = {};
 	u32 bitsMarked[WordCount * 8];
@@ -724,5 +724,121 @@ TEST_F(BitSpanFixture, foreachSetBit_testPerformanceManyObjects)
 		ASSERT_GT(it, WordCount);
 	}
 }
+
+TEST(bitword_fixture, setbit13)
+{
+	BitWordType value{};
+
+	bitword::setBit(value, 13);
+
+	ASSERT_TRUE(bitword::getBit(value, 13));
+}
+
+TEST(bitword_fixture, setAndGet_testAllValidVariations)
+{
+	BitWordType one = { 1 };
+	for (uint i = 0; i < NumBitsInWord; ++i)
+	{
+		const BitWordType expected = one << i;
+		BitWordType value = 0;
+
+		bitword::setBit(value, i);
+		ASSERT_TRUE(bitword::getBit(value, i));
+
+		ASSERT_EQ(expected, value);
+	}
+}
+
+TEST(bitword_fixture, testSetAndGet_invalidValues)
+{
+	{
+		BitWordType value = 0;
+		bitword::setBit(value, 64);
+		ASSERT_TRUE(bitword::getBit(value, 64));
+	}
+	{
+		BitWordType value = 0;
+		bitword::setBit(value, 65);
+		ASSERT_TRUE(bitword::getBit(value, 65));
+	}
+	{
+		BitWordType value = 0;
+		bitword::setBit(value, 65);
+		ASSERT_TRUE(bitword::getBit(value, 65));
+	}
+}
+
+TEST_F(BitSpanFixture, countSetBits)
+{
+	const u32 NumWords = 100;
+	const u32 NumBits = NumWords * NumBitsInWord - 17;
+	BitWordType buffer[NumWords];
+	
+	BitSpan span(buffer, NumBits);
+
+	{
+		meta::fill_container(buffer, 0x7);
+		u32 numSetBits = span.countSetBits();
+
+		ASSERT_EQ(numSetBits, 3 * NumWords);
+	}
+}
+
+TEST_F(BitSpanFixture, setBitGetBit)
+{
+	const u32 NumWords = 100;
+	const u32 NumBits = NumWords * NumBitsInWord - 17;
+	BitWordType buffer[NumWords];
+
+	BitSpan span(buffer, NumBits);
+	span.clearAll();
+
+	span.setBit(5);
+	span.setBit(20);
+	span.setBit(80);
+	span.setBit(120);
+	span.setBit(123);
+	span.setBit(124);
+	span.setBit(125);
+
+	ASSERT_TRUE(span.getBit(5));
+	ASSERT_TRUE(span.getBit(20));
+	ASSERT_TRUE(span.getBit(80));
+	ASSERT_TRUE(span.getBit(120));
+	ASSERT_TRUE(span.getBit(123));
+	ASSERT_TRUE(span.getBit(124));
+	ASSERT_TRUE(span.getBit(125));
+}
+
+TEST_F(BitSpanFixture, setBitForeachSetBit)
+{
+	const u32 NumWords = 100;
+	const u32 NumBits = NumWords * NumBitsInWord - 17;
+	BitWordType buffer[NumWords];
+
+	BitSpan span(buffer, NumBits);
+	span.clearAll();
+
+	span.setBit(5);
+	span.setBit(20);
+	span.setBit(80);
+	span.setBit(120);
+	span.setBit(123);
+	span.setBit(124);
+	span.setBit(125);
+
+	u32 markedBits[20];
+	u32 counter = 0;
+	span.foreachSetBit([&counter, &markedBits](u32 bit) { markedBits[counter++] = bit; });
+
+	ASSERT_EQ(markedBits[0], 5u);
+	ASSERT_EQ(markedBits[1], 20u);
+	ASSERT_EQ(markedBits[2], 80u);
+	ASSERT_EQ(markedBits[3], 120u);
+	ASSERT_EQ(markedBits[4], 123u);
+	ASSERT_EQ(markedBits[5], 124u);
+	ASSERT_EQ(markedBits[6], 125u);
+}
+
 }
 
