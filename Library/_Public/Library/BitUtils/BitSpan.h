@@ -3,133 +3,11 @@
 
 #include <Core/Platform.h>
 #include <Core/Types.h>
-#include <Library/library_module.h>
+#include <Library/BitUtils/BitRangeZipper.h>
+#include <Library/BitUtils/BitWord.h>
 
 namespace ddahlkvist
 {
-
-using BitWordType = u64;
-constexpr u32 NumBitsInWord = sizeof(BitWordType) * 8;
-
-namespace bitword
-{
-
-constexpr BitWordType Zero = BitWordType{ 0 };
-constexpr BitWordType Ones = BitWordType{ ~0ull };
-
-constexpr bool hasDanglingPart(u32 numBits)
-{
-	return (numBits % NumBitsInWord != 0);
-}
-
-constexpr u32 getNumWordsRequired(u32 numBits) {
-	const u32 numWords = numBits / NumBitsInWord + (numBits % NumBitsInWord != 0);
-	return numWords;
-}
-
-constexpr u32 getNumBytesRequiredToRepresentWordBasedBitBuffer(u32 numBits) {
-	const u32 numWords = getNumWordsRequired(numBits);
-	const u32 numBytes = numWords * sizeof(BitWordType);
-	return numBytes;
-}
-
-constexpr BitWordType getDanglingPart(u32 numBits)
-{
-	numBits = numBits % NumBitsInWord;
-
-	BitWordType value = 1;
-	value <<= numBits;
-	value -= 1;
-	return value;
-}
-
-inline void clearBit(BitWordType& word, u32 bit)
-{
-	BitWordType mask = 1u;
-	mask <<= bit;
-	word &= ~mask;
-}
-
-inline void setBit(BitWordType& word, u32 bit)
-{
-	BitWordType mask = 1u;
-	mask <<= bit;
-	word = (word & ~mask) | mask;
-}
-
-inline bool getBit(BitWordType word, u32 bit)
-{
-	BitWordType mask = 1u;
-	mask <<= bit;
-	
-	return word & mask;
-}
-
-template<class BitAction>
-void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
-{
-	uint i = invokedBitIndexOffset;
-
-	while (word != 0u)
-	{
-		if (word & 1u)
-			action(i);
-
-		i++;
-		word >>= 1;
-	}
-}
-
-}
-
-// utility class for being able to perform actions on two different "range of bits"
-class BitRangeZipper final
-{
-public:
-	BitRangeZipper(void* __restrict lhs, void* __restrict rhs, u32 numBits)
-		: _lhs(reinterpret_cast<BitWordType*>(lhs))
-		, _rhs(reinterpret_cast<BitWordType*>(rhs))
-		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
-		, _numWords(bitword::getNumWordsRequired(numBits))
-		, _numBits(numBits)
-	{
-		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
-		clearDanglingBits();
-	}
-
-	inline void clearDanglingBits()
-	{
-		if (_numWords > 0) {
-			_lhs[_numWords - 1] &= _danglingMask;
-			_rhs[_numWords - 1] &= _danglingMask;
-		}
-	}
-
-	// examples:
-	// auto operatorOREq = [](auto& a, auto b) -> BitWordType { a |= b; }
-	// zipper.foreachWord(operatorOrEq, danglingOrEq);
-	template<class BitAction>
-	inline void foreachWord(BitAction&& action) noexcept {
-		auto lhs = _lhs;
-		auto rhs = _rhs;
-		auto end = lhs + _numWords;
-
-		while (lhs != end)
-		{
-			action(*lhs, *rhs);
-			lhs++;
-			rhs++;
-		}
-	}
-
-private:
-	BitWordType* __restrict _lhs;
-	BitWordType* __restrict _rhs;
-	BitWordType _danglingMask;
-
-	const u32 _numWords;
-	const u32 _numBits;
-};
 
 // BitSpan provide functionality to reason about a range of bits
 // it does not own or manage any data/buffer [memory management is supposed to happen outside of this class]
@@ -149,6 +27,7 @@ public:
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
+
 		clearDanglingBits();
 	}
 

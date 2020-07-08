@@ -1,0 +1,60 @@
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
+#pragma once
+
+#include <Core/Platform.h>
+#include <Core/Types.h>
+#include <Library/BitUtils/BitWord.h>
+
+namespace ddahlkvist
+{
+
+// utility class for being able to perform actions on two different "range of bits"
+class BitRangeZipper final
+{
+public:
+	BitRangeZipper(void* __restrict lhs, void* __restrict rhs, u32 numBits)
+		: _lhs(reinterpret_cast<BitWordType*>(lhs))
+		, _rhs(reinterpret_cast<BitWordType*>(rhs))
+		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
+		, _numWords(bitword::getNumWordsRequired(numBits))
+		, _numBits(numBits)
+	{
+		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
+		clearDanglingBits();
+	}
+
+	inline void clearDanglingBits()
+	{
+		if (_numWords > 0) {
+			_lhs[_numWords - 1] &= _danglingMask;
+			_rhs[_numWords - 1] &= _danglingMask;
+		}
+	}
+
+	// examples:
+	// auto operatorOREq = [](auto& a, auto b) -> BitWordType { a |= b; }
+	// zipper.foreachWord(operatorOrEq, danglingOrEq);
+	template<class BitAction>
+	inline void foreachWord(BitAction&& action) noexcept {
+		auto lhs = _lhs;
+		auto rhs = _rhs;
+		auto end = lhs + _numWords;
+
+		while (lhs != end)
+		{
+			action(*lhs, *rhs);
+			lhs++;
+			rhs++;
+		}
+	}
+
+private:
+	BitWordType* __restrict _lhs;
+	BitWordType* __restrict _rhs;
+	BitWordType _danglingMask;
+
+	const u32 _numWords;
+	const u32 _numBits;
+};
+
+}
