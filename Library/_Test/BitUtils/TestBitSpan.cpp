@@ -523,6 +523,7 @@ TEST_F(BitSpanFixture, foreachSetBit_withReportedIndexOffset)
 		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex + IndexOffset); }, data, IndexOffset);
 	}
 }
+
 TEST_F(BitSpanFixture, foreachSetBit_withReportedIndexOffsetCanBeReallyBig)
 {
 	BitWordType one = 1;
@@ -557,41 +558,41 @@ TEST_F(BitSpanFixture, foreachSetBit_withReportedIndexOffsetCanBeReallyBig)
 #pragma warning( push )
 #pragma warning( disable : 4293 ) // warning C4293: '<<': shift count negative or too big, undefined behavior
 
-TEST_F(BitSpanFixture, foreachSetBit_shiftTooLarge_ub)
-{
-	BitWordType one = 1;
+//TEST_F(BitSpanFixture, foreachSetBit_shiftTooLarge_ub)
+//{
+	//BitWordType one = 1;
 
 	// all of these are UB
-	{
-		const u32 ExpectedBitIndex = 64;
-		BitWordType data = one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
-	}
-	{
+	//{
+	//	const u32 ExpectedBitIndex = 64;
+	//	BitWordType data = one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
+	//}
+	//{
 
-		const u32 ExpectedBitIndex = 65;
-		BitWordType data = one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
-	}
-	{
+	//	const u32 ExpectedBitIndex = 65;
+	//	BitWordType data = one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
+	//}
+	//{
 
-		const u32 ExpectedBitIndex = 127;
-		BitWordType data = one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
-	}
-	{
+	//	const u32 ExpectedBitIndex = 127;
+	//	BitWordType data = one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
+	//}
+	//{
 
-		const u32 ExpectedBitIndex = 128;
-		BitWordType data = one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
-	}
-	{
+	//	const u32 ExpectedBitIndex = 128;
+	//	BitWordType data = one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
+	//}
+	//{
 
-		const u32 ExpectedBitIndex = 129;
-		BitWordType data = one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
-	}
-}
+	//	const u32 ExpectedBitIndex = 129;
+	//	BitWordType data = one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % NumBitsInWord); }, data);
+	//}
+//}
 
 TEST_F(BitSpanFixture, foreachSetBit_weirdCastBehavior_andUB)
 {
@@ -614,27 +615,114 @@ TEST_F(BitSpanFixture, foreachSetBit_weirdCastBehavior_andUB)
 		BitWordType casted = 0xFFFFFFFF80000000;
 		ASSERT_EQ(data, casted);
 	}
-	{
-		// this is UB
-		const u32 ExpectedBitIndex = 32;
-		BitWordType data = s32_one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, 0u); }, data);
-	}
-	{
-		// this is UB
-		const u32 ExpectedBitIndex = 33;
-		BitWordType data = s32_one << ExpectedBitIndex;
-		bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % 32); }, data);
-	}
-	{
-		// this is UB
-		const u32 ExpectedBitIndex = 63;
-		BitWordType data = s32_one << ExpectedBitIndex;
-		BitWordType casted = 0xFFFFFFFF80000000;
-		ASSERT_EQ(data, casted);
-	}
+	//{
+	//	// this is UB
+	//	const u32 ExpectedBitIndex = 32;
+	//	BitWordType data = s32_one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, 0u); }, data);
+	//}
+	//{
+	//	// this is UB
+	//	const u32 ExpectedBitIndex = 33;
+	//	BitWordType data = s32_one << ExpectedBitIndex;
+	//	bitword::foreachSetBit([&](u32 bit) { ASSERT_EQ(bit, ExpectedBitIndex % 32); }, data);
+	//}
+	//{
+	//	// this is UB
+	//	const u32 ExpectedBitIndex = 63;
+	//	BitWordType data = s32_one << ExpectedBitIndex;
+	//	BitWordType casted = 0xFFFFFFFF80000000;
+	//	ASSERT_EQ(data, casted);
+	//}
 }
 #pragma warning( pop )
 
+TEST_F(BitSpanFixture, foreachSetBit_correctIndexProvided)
+{
+	BitWordType buffer[177] = {};
+	BitSpan span(buffer, 5279);
+
+	const u32 ExpectedBit1 = 2379;
+	const u32 ExpectedBit2 = 5001;
+
+	buffer[ExpectedBit1 / NumBitsInWord] = BitWordType{ 1 } << (ExpectedBit1 % NumBitsInWord);
+	buffer[ExpectedBit2 / NumBitsInWord] = BitWordType{ 1 } << (ExpectedBit2 % NumBitsInWord);
+
+	u32 counter = 0;
+	u32 indexes[10];
+	span.foreachSetBit([&counter, &indexes](u32 bitIdx) { indexes[counter++] = bitIdx; });
+
+	ASSERT_EQ(counter, 2u);
+	ASSERT_EQ(indexes[0], ExpectedBit1);
+	ASSERT_EQ(indexes[1], ExpectedBit2);
+}
+
+TEST_F(BitSpanFixture, foreachSetBit_notInvokedForDanglingBits)
+{
+	BitWordType buffer[1] = {};
+	BitSpan span(buffer, 61);
+
+	buffer[0] |= BitWordType{ 1 } << 59;
+	buffer[0] |= BitWordType{ 1 } << 60;
+	buffer[0] |= BitWordType{ 1 } << 61;
+	buffer[0] |= BitWordType{ 1 } << 62;
+	buffer[0] |= BitWordType{ 1 } << 63;
+
+	u32 counter = 0;
+	u32 indexes[10];
+	span.foreachSetBit([&counter, &indexes](u32 bitIdx) { 
+		indexes[counter++] = bitIdx; 
+	});
+
+	ASSERT_EQ(counter, 2u);
+	ASSERT_EQ(indexes[0], 59u);
+	ASSERT_EQ(indexes[1], 60u);
+}
+
+TEST_F(BitSpanFixture, foreachSetBit_notInvokedForDanglingBitsNotZeroWord)
+{
+	BitWordType buffer[4] = {};
+	BitSpan span(buffer, 130);
+
+	buffer[0] |= BitWordType{ 1 } << 63;
+	buffer[1] |= BitWordType{ 1 } << 63;
+	buffer[2] |= 0xffffffff0;
+
+	u32 counter = 0;
+	u32 indexes[10];
+	span.foreachSetBit([&counter, &indexes](u32 bitIdx) {
+		indexes[counter++] = bitIdx;
+		});
+
+	ASSERT_EQ(counter, 2u);
+	ASSERT_EQ(indexes[0], 63u);
+	ASSERT_EQ(indexes[1], 64u + 63);
+}
+
+TEST_F(BitSpanFixture, foreachSetBit_testPerformanceManyObjects)
+{
+	const u32 BitCount = 899101;
+	const u32 WordCount = bitword::getNumWordsRequired(BitCount);
+	BitWordType buffer[WordCount] = {};
+	u32 bitsMarked[WordCount * 8];
+
+	{
+		meta::fill_container(buffer, 0x0800080);
+		BitSpan span(buffer, BitCount);
+
+		u32 it = 0;
+		span.foreachSetBit([&bitsMarked, &it](u32 bitIdx) { bitsMarked[it++] = bitIdx; });
+		ASSERT_GT(it, WordCount);
+	}
+
+	{
+		meta::fill_container(buffer, 0x0020020002);
+		BitSpan span(buffer, BitCount);
+
+		u32 it = 0;
+		span.foreachSetBit([&bitsMarked, &it](u32 bitIdx) { bitsMarked[it++] = bitIdx; });
+		ASSERT_GT(it, WordCount);
+	}
+}
 }
 

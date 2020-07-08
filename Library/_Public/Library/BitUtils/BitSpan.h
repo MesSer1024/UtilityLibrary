@@ -22,13 +22,13 @@ constexpr bool hasDanglingPart(u32 numBits)
 	return (numBits % NumBitsInWord != 0);
 }
 
-constexpr u32 getNumWords(u32 numBits) {
+constexpr u32 getNumWordsRequired(u32 numBits) {
 	const u32 numWords = numBits / NumBitsInWord + (numBits % NumBitsInWord != 0);
 	return numWords;
 }
 
 constexpr u32 getNumBytesRequiredToRepresentWordBasedBitBuffer(u32 numBits) {
-	const u32 numWords = getNumWords(numBits);
+	const u32 numWords = getNumWordsRequired(numBits);
 	const u32 numBytes = numWords * sizeof(BitWordType);
 	return numBytes;
 }
@@ -74,7 +74,7 @@ public:
 		: _lhs(reinterpret_cast<BitWordType*>(lhs))
 		, _rhs(reinterpret_cast<BitWordType*>(rhs))
 		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
-		, _numWords(bitword::getNumWords(numBits))
+		, _numWords(bitword::getNumWordsRequired(numBits))
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
@@ -124,11 +124,12 @@ public:
 	BitSpan(const BitSpan&) = delete;
 	void operator=(const BitSpan&) = delete;
 	void operator=(BitSpan&&) = delete;
+	BitSpan() = delete;
 
 	inline BitSpan(void* data, u32 numBits)
 		: _data(reinterpret_cast<BitWordType*>(data))
 		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
-		, _numWords(bitword::getNumWords(numBits))
+		, _numWords(bitword::getNumWordsRequired(numBits))
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
@@ -153,8 +154,8 @@ public:
 		clearDanglingBits();
 	}
 
-	template<typename BitAction>
-	inline void foreachWord(BitAction&& action) noexcept {
+	template<typename WordAction>
+	inline void foreachWord(WordAction&& action) noexcept {
 		auto it = _data;
 		auto end = it + _numWords;
 
@@ -163,6 +164,17 @@ public:
 			action(*it);
 			it++;
 		}
+	}
+
+	template<typename BitAction>
+	inline void foreachSetBit(BitAction&& action) noexcept {
+		u32 it = 0;
+		clearDanglingBits();
+
+		foreachWord([&it, bitAction = std::forward<BitAction&&>(action)](auto word) {
+			bitword::foreachSetBit(bitAction, word, it * NumBitsInWord);
+			it++;
+		});
 	}
 
 	inline bool operator==(const BitSpan& other)
