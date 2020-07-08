@@ -26,21 +26,22 @@ constexpr BitWordType danglingPart(u32 numBits)
 	value -= 1;
 	return value;
 }
-
-//template<class WordAction>
-//	void foreachSetBit(WordAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
+//
+//template<class BitAction>
+//void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
+//{
+//	uint i = invokedBitIndexOffset;
+//
+//	while (word != 0u)
 //	{
-//		uint i = invokedBitIndexOffset;
+//		if (word & 1u)
+//			action(i);
 //
-//		while (word != 0u)
-//		{
-//			if (word & 1u)
-//				action(i);
-//
-//			i++;
-//			word >>= 1;
-//		}
+//		i++;
+//		word >>= 1;
 //	}
+//}
+
 //
 //	inline bool equals(BitWordType a, BitWordType b, u32 numBitsToCompare)
 //	{
@@ -60,6 +61,7 @@ public:
 		, _numWords((numBits / BitsInWord) + (numBits % BitsInWord != 0))
 		, _numBits(numBits)
 	{
+		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
 		clearDanglingBits();
 	}
 
@@ -73,10 +75,9 @@ public:
 
 	// examples:
 	// auto operatorOREq = [](auto& a, auto b) -> BitWordType { a |= b; }
-	// auto danglingOREq = [](auto& a, auto b, auto mask) -> BitWordType { return a = ((a|b) & mask) | (a & ~mask); }
 	// zipper.foreachWord(operatorOrEq, danglingOrEq);
-	template<class WordAction>
-	inline void foreachWord(WordAction&& action) noexcept {
+	template<class BitAction>
+	inline void foreachWord(BitAction&& action) noexcept {
 		auto lhs = _lhs;
 		auto rhs = _rhs;
 		auto end = lhs + _numWords;
@@ -132,8 +133,8 @@ public:
 		clearDanglingBits();
 	}
 
-	template<typename WordAction>
-	inline void foreachWord(WordAction&& action) noexcept {
+	template<typename BitAction>
+	inline void foreachWord(BitAction&& action) noexcept {
 		auto it = _data;
 		auto end = it + _numWords;
 
@@ -142,6 +143,30 @@ public:
 			action(*it);
 			it++;
 		}
+	}
+
+	void operator|=(const BitSpan& other)
+	{
+		BitRangeZipper zipper(_data, other._data, _numBits);
+		zipper.foreachWord([](auto& a, auto b) { a |= b; });
+
+		clearDanglingBits();
+	}
+
+	void operator&=(const BitSpan& other)
+	{
+		BitRangeZipper zipper(_data, other._data, _numBits);
+		zipper.foreachWord([](auto& a, auto b) { a &= b; });
+
+		clearDanglingBits();
+	}
+
+	void operator^=(const BitSpan& other)
+	{
+		BitRangeZipper zipper(_data, other._data, _numBits);
+		zipper.foreachWord([](auto& a, auto b) { a ^= b; });
+
+		clearDanglingBits();
 	}
 
 private:

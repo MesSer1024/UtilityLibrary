@@ -294,25 +294,63 @@ TEST_F(BitSpanFixture, foreachWord_invokedCorrectly) {
 		ASSERT_EQ(output[i], input[i]);
 }
 
-//TEST_F(BitSpanFixture, operator_OREQ) {
-	//const u32 NumWords = 15;
-	//const u32 NumBits = NumWords * BitsInWord - 17;
-	//BitWordType buffer1[NumWords];
-	//BitWordType buffer2[NumWords];
+TEST_F(BitSpanFixture, operator_OREQ) {
+	const u32 NumWords = 15;
+	const u32 NumBits = NumWords * BitsInWord - 17;
+	BitWordType lhs[NumWords];
+	BitWordType rhs[NumWords];
 
-	//meta::fill_container(buffer1, BitWordType{ 0xF });
-	//meta::fill_container(buffer2, BitWordType{ 0xbebe });
+	const BitWordType DefaultLHS = 0xFF;
+	meta::fill_container(lhs, DefaultLHS);
+	meta::fill_container(rhs, BitWordType{ 0xbebebebe });
 
-	//BitSpan span1(buffer1, NumBits);
-	//BitSpan span2(buffer2, NumBits);
+	BitSpan lhsSpan(lhs, NumBits);
+	BitSpan rhsSpan(rhs, NumBits);
 
-	//span1 |= span2;
+	lhsSpan |= rhsSpan;
 
-	//u32 it = 0;
-	//span1.foreachWord([&buffer1, &it](auto a) { buffer1[it++] == a; }
+	for (uint i = 0; i < NumWords; ++i)
+		ASSERT_EQ(lhs[i], DefaultLHS | rhs[i]);
+}
 
-//}
-//
+TEST_F(BitSpanFixture, operator_ANDEQ) {
+	const u32 NumWords = 15;
+	const u32 NumBits = NumWords * BitsInWord - 17;
+	BitWordType lhs[NumWords];
+	BitWordType rhs[NumWords];
+
+	const BitWordType DefaultLHS = 0xFF;
+	meta::fill_container(lhs, DefaultLHS);
+	meta::fill_container(rhs, BitWordType{ 0xbebebebe });
+
+	BitSpan lhsSpan(lhs, NumBits);
+	BitSpan rhsSpan(rhs, NumBits);
+
+	lhsSpan &= rhsSpan;
+
+	for (uint i = 0; i < NumWords; ++i)
+		ASSERT_EQ(lhs[i], DefaultLHS & rhs[i]);
+}
+
+TEST_F(BitSpanFixture, operator_XOREQ) {
+	const u32 NumWords = 15;
+	const u32 NumBits = NumWords * BitsInWord - 17;
+	BitWordType lhs[NumWords];
+	BitWordType rhs[NumWords];
+
+	const BitWordType DefaultLHS = 0xFF;
+	meta::fill_container(lhs, DefaultLHS);
+	meta::fill_container(rhs, BitWordType{ 0xbebebebe });
+
+	BitSpan lhsSpan(lhs, NumBits);
+	BitSpan rhsSpan(rhs, NumBits);
+
+	lhsSpan ^= rhsSpan;
+
+	for (uint i = 0; i < NumWords; ++i)
+		ASSERT_EQ(lhs[i], DefaultLHS ^ rhs[i]);
+}
+
 //
 //
 //TEST_F(BitSpanFixture, operatorEQ_pointersRemains) {
