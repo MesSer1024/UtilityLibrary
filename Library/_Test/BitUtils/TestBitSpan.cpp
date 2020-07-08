@@ -1,3 +1,4 @@
+// copyright Daniel Dahlkvist (c) 2020
 #include <Library/BitUtils/BitSpan.h>
 
 #include <Core/Meta/Meta.h>
@@ -79,12 +80,12 @@ protected:
 	void TearDown() override {
 	}
 
-	u64 _buffer[100];
+	BitWordType _buffer[100];
 };
 
 TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
 	const u32 numWords = 7;
-	const u32 bitCount = 64 * numWords;
+	const u32 bitCount = BitsInWord * numWords;
 
 	BitSpan span(_buffer, bitCount);
 	span.clearAll();
@@ -97,7 +98,7 @@ TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
 
 TEST_F(BitSpanFixture, setAll_rangeContainOnes) {
 	const u32 numWords = 7;
-	const u32 bitCount = 64 * numWords;
+	const u32 bitCount = BitsInWord * numWords;
 
 	BitSpan span(_buffer, bitCount);
 	span.setAll();
@@ -110,7 +111,7 @@ TEST_F(BitSpanFixture, setAll_rangeContainOnes) {
 
 TEST_F(BitSpanFixture, danglingBits_handledBySetAndClear) {
 	const u32 numWords = 7;
-	const u32 bitCount = 64 * numWords + 37;
+	const u32 bitCount = BitsInWord *numWords + 37;
 	const BitWordType danglingMask = (static_cast<BitWordType>(1) << 37) - 1;
 	BitWordType Default = 0xBEBEBEBEBEBEBEBE;
 
@@ -193,7 +194,7 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 65);
-		const BitWordType danglingMask = numBitsToMask(65 % 64);
+		const BitWordType danglingMask = numBitsToMask(65 % BitsInWord);
 		span.setAll();
 		span.clearAll();
 
@@ -203,7 +204,7 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 127);
-		const BitWordType danglingMask = numBitsToMask(127 % 64);
+		const BitWordType danglingMask = numBitsToMask(127 % BitsInWord);
 		span.setAll();
 		span.clearAll();
 
@@ -224,7 +225,7 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 	}
 	{
 		BitSpan span(_buffer, 129);
-		const BitWordType danglingMask = numBitsToMask(129 % 64);
+		const BitWordType danglingMask = numBitsToMask(129 % BitsInWord);
 		span.setAll();
 		span.clearAll();
 
@@ -237,23 +238,22 @@ TEST_F(BitSpanFixture, tresholds_bitsAroundWordSize) {
 
 TEST_F(BitSpanFixture, functionality_canHandleLargeSpan452003bits) {
 	const u32 numBits = 452003;
-	const u32 LastElement = numBits / 64;
-	u64 largeBuffer[LastElement + 1];
+	const u32 LastElement = numBits / BitsInWord;
+	BitWordType largeBuffer[LastElement + 1];
 	const BitWordType Default = 0xFBFBFBFBFBFBFBFB;
 	meta::fill_container(largeBuffer, Default);
 
 	BitSpan span(largeBuffer, numBits);
 	span.setAll();
 	uint i = 0;
-	const BitWordType DanglingOne = (Default & ~numBitsToMask(numBits % 64)) | (BitWordType{ ~0ull } &numBitsToMask(numBits % 64));
-	const BitWordType DanglingZero = (Default & ~numBitsToMask(numBits % 64)) | (BitWordType{ 0 } &numBitsToMask(numBits % 64));
+	const BitWordType DanglingOne = (Default & ~numBitsToMask(numBits % BitsInWord)) | (BitWordType{ ~0ull } &numBitsToMask(numBits % BitsInWord));
+	const BitWordType DanglingZero = (Default & ~numBitsToMask(numBits % BitsInWord)) | (BitWordType{ 0 } &numBitsToMask(numBits % BitsInWord));
 	for (auto value : largeBuffer)
 	{
 		if (i++ < LastElement)
 			ASSERT_EQ(value, BitWordType{ ~0ull });
 		else
 			ASSERT_EQ(value, DanglingOne);
-
 	}
 
 	i = 0;

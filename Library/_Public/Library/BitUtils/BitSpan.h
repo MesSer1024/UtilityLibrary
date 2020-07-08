@@ -27,20 +27,21 @@ constexpr BitWordType numBitsToMask(u32 numBits)
 
 
 // utility class for being able to perform actions on two different "range of bits"
-struct BitRangeZipper final
+class BitRangeZipper final
 {
+public:
 	BitRangeZipper(void* __restrict data, void* __restrict data2, u32 bitCount)
 		: _data(reinterpret_cast<BitWordType*>(data))
 		, _data2(reinterpret_cast<BitWordType*>(data2))
 		, _bitCount(bitCount)
-		, _danglingMask(numBitsToMask(bitCount % 64))
-		, _iterations(static_cast<u16>(bitCount / 64))
+		, _danglingMask(numBitsToMask(bitCount % BitsInWord))
+		, _iterations(static_cast<u16>(bitCount / BitsInWord))
 	{
 	}
 
 	// examples:
-	// auto operatorOrEq = [](auto& a, auto b) -> BitWordType { a |= b; }
-	// auto danglingOrEq = [](auto& a, auto b, auto mask) -> BitWordType { return a = ((a|b) & mask) | (a & ~mask); }
+	// auto operatorOREq = [](auto& a, auto b) -> BitWordType { a |= b; }
+	// auto danglingOREq = [](auto& a, auto b, auto mask) -> BitWordType { return a = ((a|b) & mask) | (a & ~mask); }
 	// zipper.foreachWord(operatorOrEq, danglingOrEq);
 	template<typename WordFunctor, typename DanglingWordFunctor>
 	inline void foreachWord(WordFunctor&& func, DanglingWordFunctor&& danglingFunc) noexcept {
@@ -75,7 +76,7 @@ public:
 		: _data(reinterpret_cast<BitWordType*>(data))
 		, _numBits(bitCount)
 		, _numWords(_numBits / BitsInWord)
-		, _danglingMask(numBitsToMask(_numBits % BitsInWord) )
+		, _danglingMask(numBitsToMask(bitCount % BitsInWord) )
 	{ }
 
 	inline void clearAll()
@@ -117,11 +118,10 @@ public:
 
 private:
 	BitWordType* _data;
+	const BitWordType _danglingMask;
 
 	const u32 _numBits;
 	const u32 _numWords;
-
-	const BitWordType _danglingMask;
 };
 
 }
