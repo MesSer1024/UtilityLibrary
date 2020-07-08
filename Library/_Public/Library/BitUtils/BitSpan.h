@@ -9,14 +9,13 @@ namespace ddahlkvist
 {
 
 using BitWordType = u64;
+constexpr u32 NumBitsInWord = sizeof(BitWordType) * 8;
 
 namespace bitword
 {
 
 constexpr BitWordType Zero = BitWordType{ 0 };
 constexpr BitWordType Ones = BitWordType{ ~0ull };
-
-constexpr u32 NumBitsInWord = sizeof(BitWordType) * 8;
 
 constexpr bool hasDanglingPart(u32 numBits)
 {
@@ -43,21 +42,21 @@ constexpr BitWordType getDanglingPart(u32 numBits)
 	value -= 1;
 	return value;
 }
-//
-//template<class BitAction>
-//void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
-//{
-//	uint i = invokedBitIndexOffset;
-//
-//	while (word != 0u)
-//	{
-//		if (word & 1u)
-//			action(i);
-//
-//		i++;
-//		word >>= 1;
-//	}
-//}
+
+template<class BitAction>
+void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
+{
+	uint i = invokedBitIndexOffset;
+
+	while (word != 0u)
+	{
+		if (word & 1u)
+			action(i);
+
+		i++;
+		word >>= 1;
+	}
+}
 
 //
 //	inline bool equals(BitWordType a, BitWordType b, u32 numBitsToCompare)
