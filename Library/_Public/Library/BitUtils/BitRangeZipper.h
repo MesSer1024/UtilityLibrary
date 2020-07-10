@@ -20,12 +20,13 @@ public:
 		, _numBits(numBits)
 	{
 		DD_ASSERT(numBits < 400000000); // sanity check against "-1 issues"
+
 		clearDanglingBits();
 	}
 
 	inline void clearDanglingBits()
 	{
-		if (_numWords > 0) {
+		if (_numWords > 0 && _danglingMask != 0) {
 			_lhs[_numWords - 1] &= _danglingMask;
 			_rhs[_numWords - 1] &= _danglingMask;
 		}

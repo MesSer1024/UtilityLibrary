@@ -5,7 +5,7 @@ workspace "CppUtilities"
   architecture "x64"   
   location "_local" -- where to place sln-files etc
   targetdir "_local/%{cfg.buildcfg}"
-  configurations { "Debug", "Release", "Final" }
+  configurations { "Debug", "Final" }
   cppdialect "C++17"
   platforms { "Static", "DLL" }
   warnings "Extra"
@@ -22,11 +22,6 @@ workspace "CppUtilities"
 
    filter { "configurations:Debug" }
       defines { "DD_DEBUG", "DEBUG" }
-      symbols "On"
-
-   filter {"configurations:Release"}
-      defines { "DD_RELEASE", "RELEASE", "NDEBUG" }
-      optimize "On"
       symbols "On"
 
    filter {"configurations:Final"}

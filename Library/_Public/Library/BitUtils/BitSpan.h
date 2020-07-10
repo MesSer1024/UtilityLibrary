@@ -33,7 +33,7 @@ public:
 
 	inline void clearDanglingBits()
 	{
-		if (_numWords > 0)
+		if (_numWords > 0 && _danglingMask != 0)
 			_data[_numWords - 1] &= _danglingMask;
 	}
 
