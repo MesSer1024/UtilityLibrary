@@ -1,5 +1,5 @@
 # UtilityLibrary
 
+# BitWord
 # BitSpan
 # BitRangeZipper
-# bitword manipulation
