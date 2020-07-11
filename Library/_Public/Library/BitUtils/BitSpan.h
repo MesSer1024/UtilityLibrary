@@ -53,7 +53,7 @@ public:
 		clearDanglingBits();
 
 		u64 counter = 0;
-		foreachWord([&counter](auto a) { counter += __popcnt64(a); });
+		foreachWord([&counter](auto a) { counter += bitword::countSetBits(a); });
 		return static_cast<u32>(counter);
 	}
 

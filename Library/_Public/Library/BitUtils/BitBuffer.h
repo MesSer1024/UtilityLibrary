@@ -1,0 +1,46 @@
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
+#pragma once
+
+#include <Core/Platform.h>
+#include <Core/Types.h>
+#include <Library/BitUtils/BitWord.h>
+#include <memory>
+
+namespace ddahlkvist
+{
+
+class BitBuffer final
+{
+public:
+	enum NoInitType { NoInit };
+	enum ZeroInitType { ZeroInit };
+	enum OneInitType { OneInit };
+
+	explicit BitBuffer(NoInitType t, u32 numBits)
+		: _numBits(numBits)
+		, _numWords(bitword::getNumWordsRequired(numBits))
+		, _data(std::make_unique<BitWordType[]>(_numWords))
+	{
+	}
+
+	explicit BitBuffer(ZeroInitType, u32 numBits) : BitBuffer(NoInitType{}, numBits) {
+		memset(_data.get(), bitword::Zero, bitword::getNumBytesRequiredToRepresentWordBasedBitBuffer(numBits));
+	}
+
+	explicit BitBuffer(OneInitType, u32 numBits) : BitBuffer(NoInitType{}, numBits) {
+		memset(_data.get(), ~0, bitword::getNumBytesRequiredToRepresentWordBasedBitBuffer(numBits));
+	}
+
+	inline u32 size() const { return _numWords * sizeof(BitWordType); }
+	inline BitWordType* data() const { return _data.get(); }
+
+	BitWordType* begin() const { return data(); }
+	BitWordType* end() const { return data() + _numWords; }
+
+private:
+	const u32 _numBits;
+	const u32 _numWords;
+	std::unique_ptr<BitWordType[]> _data;
+};
+
+}

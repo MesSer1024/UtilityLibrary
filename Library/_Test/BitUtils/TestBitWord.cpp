@@ -1,4 +1,4 @@
-// copyright Daniel Dahlkvist (c) 2020
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
 #include <Library/BitUtils/BitSpan.h>
 
 #include <Core/Meta/Meta.h>
@@ -232,21 +232,22 @@ TEST(bitword_fixture, setAndGet_testAllValidVariations)
 
 TEST(bitword_fixture, testSetAndGet_invalidValues)
 {
-	{
-		BitWordType value = 0;
-		bitword::setBit(value, 64);
-		ASSERT_TRUE(bitword::getBit(value, 64));
-	}
-	{
-		BitWordType value = 0;
-		bitword::setBit(value, 65);
-		ASSERT_TRUE(bitword::getBit(value, 65));
-	}
-	{
-		BitWordType value = 0;
-		bitword::setBit(value, 65);
-		ASSERT_TRUE(bitword::getBit(value, 65));
-	}
+	// all of these are UB
+	//{
+	//	BitWordType value = 0;
+	//	bitword::setBit(value, 64);
+	//	ASSERT_TRUE(bitword::getBit(value, 64));
+	//}
+	//{
+	//	BitWordType value = 0;
+	//	bitword::setBit(value, 65);
+	//	ASSERT_TRUE(bitword::getBit(value, 65));
+	//}
+	//{
+	//	BitWordType value = 0;
+	//	bitword::setBit(value, 65);
+	//	ASSERT_TRUE(bitword::getBit(value, 65));
+	//}
 }
 
 #pragma warning( push )

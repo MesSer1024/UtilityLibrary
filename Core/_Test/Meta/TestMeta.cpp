@@ -1,3 +1,4 @@
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
 #include <Core/Meta/Meta.h>
 #include <Core/Types.h>
 #include <gtest/gtest.h>

@@ -64,6 +64,11 @@ inline bool getBit(BitWordType word, u32 bit)
 	return word & mask;
 }
 
+inline BitWordType countSetBits(BitWordType word)
+{
+	return __popcnt64(word);
+}
+
 template<class BitAction>
 void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
 {

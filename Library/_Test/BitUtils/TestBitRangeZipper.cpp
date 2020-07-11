@@ -1,4 +1,4 @@
-// copyright Daniel Dahlkvist (c) 2020
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
 #include <Library/BitUtils/BitSpan.h>
 
 #include <Core/Meta/Meta.h>

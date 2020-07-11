@@ -1,3 +1,4 @@
+// copyright Daniel Dahlkvist (c) 2020 [github.com/messer1024]
 #pragma once
 
 #include <Core/Platform.h>
@@ -15,7 +16,6 @@ namespace ddahlkvist
 #define LIBRARY_PUBLIC
 #endif
 
-//#define LIBRARY_INTERNAL LIBRARY_PUBLIC
 #if defined(BUILD_INTERNAL_ACCESS_LIBRARY_MODULE) || defined(BUILD_EXPORT_LIBRARY_MODULE)
 #define LIBRARY_INTERNAL LIBRARY_PUBLIC
 #else
