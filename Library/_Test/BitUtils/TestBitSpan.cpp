@@ -22,31 +22,35 @@ protected:
 };
 
 TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
-	const u32 NumWords = 7;
-	const u32 BitCount = NumBitsInWord * NumWords;
-	BitWordType buffer[NumWords];
+	const u32 SpanLength = 7;
+	const u32 BufferLength = 10;
+	const u32 BitCount = NumBitsInWord * SpanLength;
+	BitWordType buffer[BufferLength];
+	std::fill(buffer, buffer + BufferLength, 13);
 
 	BitSpan span(buffer, BitCount);
 	span.clearAll();
 
-	for (uint i = 0; i < NumWords; ++i)
+	for (uint i = 0; i < SpanLength; ++i)
 		ASSERT_EQ(buffer[i], bitword::Zero);
 
-	ASSERT_NE(buffer[NumWords + 1], BitWordType{ 0 });
+	ASSERT_NE(buffer[SpanLength + 1], BitWordType{ 0 });
 }
 
 TEST_F(BitSpanFixture, setAll_rangeContainOnes) {
-	const u32 NumWords = 7;
-	const u32 BitCount = NumBitsInWord * NumWords;
-	BitWordType buffer[NumWords];
+	const u32 SpanLength = 7;
+	const u32 BufferLength = 10;
+
+	const u32 BitCount = NumBitsInWord * SpanLength;
+	BitWordType buffer[BufferLength];
 
 	BitSpan span(buffer, BitCount);
 	span.setAll();
 
-	for (uint i = 0; i < NumWords; ++i)
+	for (uint i = 0; i < SpanLength; ++i)
 		ASSERT_EQ(buffer[i], bitword::Ones);
 
-	ASSERT_NE(buffer[NumWords + 1], bitword::Ones);
+	ASSERT_NE(buffer[SpanLength + 1], bitword::Ones);
 }
 
 TEST_F(BitSpanFixture, danglingBits_handledBySetAndClear) {
@@ -468,7 +472,7 @@ TEST_F(BitSpanFixture, setBitGetBit)
 {
 	const u32 NumWords = 100;
 	const u32 NumBits = NumWords * NumBitsInWord - 17;
-	BitWordType buffer[NumWords]; // test autobuild
+	BitWordType buffer[NumWords];
 
 	BitSpan span(buffer, NumBits);
 	span.clearAll();
