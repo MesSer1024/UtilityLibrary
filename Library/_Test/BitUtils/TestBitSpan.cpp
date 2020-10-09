@@ -424,8 +424,8 @@ TEST_F(BitSpanFixture, foreachSetBit_notInvokedForDanglingBitsNotZeroWord)
 
 TEST_F(BitSpanFixture, foreachSetBit_testPerformanceManyObjects)
 {
-	const u32 BitCount = 113101;
-	const u32 WordCount = bitword::getNumWordsRequired(BitCount);
+	constexpr u32 BitCount = 113101;
+	constexpr u32 WordCount = bitword::getNumWordsRequired(BitCount);
 	BitWordType buffer[WordCount] = {};
 	u32 bitsMarked[WordCount * 8];
 

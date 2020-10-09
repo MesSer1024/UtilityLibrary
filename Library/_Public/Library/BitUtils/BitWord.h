@@ -2,6 +2,7 @@
 #pragma once
 
 #include <Core/Types.h>
+#include <intrin.h>
 
 namespace ddahlkvist
 {
@@ -36,31 +37,25 @@ constexpr BitWordType getDanglingPart(u32 numBits)
 {
 	numBits = numBits % NumBitsInWord;
 
-	BitWordType value = 1;
-	value <<= numBits;
-	value -= 1;
+	BitWordType value = (1ull << numBits) - 1;
 	return value;
 }
 
 inline void clearBit(BitWordType& word, u32 bit)
 {
-	BitWordType mask = 1u;
-	mask <<= bit;
+	BitWordType mask = (1ull << bit);
 	word &= ~mask;
 }
 
 inline void setBit(BitWordType& word, u32 bit)
 {
-	BitWordType mask = 1u;
-	mask <<= bit;
+	BitWordType mask = (1ull << bit);
 	word = (word & ~mask) | mask;
 }
 
 inline bool getBit(BitWordType word, u32 bit)
 {
-	BitWordType mask = 1u;
-	mask <<= bit;
-
+	BitWordType mask = (1ull << bit);
 	return word & mask;
 }
 
@@ -70,13 +65,13 @@ inline BitWordType countSetBits(BitWordType word)
 }
 
 template<class BitAction>
-void foreachSetBit(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
+void foreachOne(BitAction&& action, BitWordType word, uint invokedBitIndexOffset = 0)
 {
 	uint i = invokedBitIndexOffset;
 
-	while (word != 0u)
+	while (word != 0ull)
 	{
-		if (word & 1u)
+		if (word & 1ull)
 			action(i);
 
 		i++;

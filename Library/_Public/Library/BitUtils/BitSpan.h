@@ -20,8 +20,8 @@ public:
 	void operator=(BitSpan&&) = delete;
 	BitSpan() = delete;
 
-	inline BitSpan(void* data, u32 numBits)
-		: _data(reinterpret_cast<BitWordType*>(data))
+	inline BitSpan(BitWordType* data, u32 numBits)
+		: _data(data)
 		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
 		, _numWords(bitword::getNumWordsRequired(numBits))
 		, _numBits(numBits)
@@ -91,7 +91,7 @@ public:
 		clearDanglingBits();
 
 		foreachWord([&it, bitAction = std::forward<BitAction&&>(action)](auto word) {
-			bitword::foreachSetBit(bitAction, word, it * NumBitsInWord);
+			bitword::foreachOne(bitAction, word, it * NumBitsInWord);
 			it++;
 		});
 	}
