@@ -12,9 +12,9 @@ namespace ddahlkvist
 class BitRangeZipper final
 {
 public:
-	BitRangeZipper(void* __restrict lhs, void* __restrict rhs, u32 numBits)
-		: _lhs(reinterpret_cast<BitWordType*>(lhs))
-		, _rhs(reinterpret_cast<BitWordType*>(rhs))
+	BitRangeZipper(BitWordType* __restrict lhs, BitWordType* __restrict rhs, u32 numBits)
+		: _lhs(lhs)
+		, _rhs(rhs)
 		, _danglingMask(bitword::hasDanglingPart(numBits) ? bitword::getDanglingPart(numBits) : bitword::Ones)
 		, _numWords(bitword::getNumWordsRequired(numBits))
 		, _numBits(numBits)
