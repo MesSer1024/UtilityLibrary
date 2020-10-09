@@ -468,7 +468,7 @@ TEST_F(BitSpanFixture, setBitGetBit)
 {
 	const u32 NumWords = 100;
 	const u32 NumBits = NumWords * NumBitsInWord - 17;
-	BitWordType buffer[NumWords] a; // test autobuild
+	BitWordType buffer[NumWords] ab; // test autobuild
 
 	BitSpan span(buffer, NumBits);
 	span.clearAll();
