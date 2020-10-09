@@ -32,7 +32,7 @@ TEST_F(BitSpanFixture, clearAll_rangeIsZeroed) {
 	span.clearAll();
 
 	for (uint i = 0; i < SpanLength; ++i)
-		ASSERT_EQ(buffer[i], bitword::Zero);
+		ASSERT_EQ(buffer[i], bitword::Zero); 
 
 	ASSERT_NE(buffer[SpanLength + 1], BitWordType{ 0 });
 }
