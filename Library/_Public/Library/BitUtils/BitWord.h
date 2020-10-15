@@ -3,6 +3,7 @@
 
 #include <Core/Types.h>
 #include <intrin.h>
+#include <functional>
 
 namespace ddahlkvist
 {
@@ -23,7 +24,7 @@ constexpr bool hasDanglingPart(u32 numBits)
 }
 
 constexpr u32 getNumWordsRequired(u32 numBits) {
-	const u32 numWords = numBits / NumBitsInWord + (numBits % NumBitsInWord != 0);
+	const u32 numWords = numBits / NumBitsInWord + static_cast<u32>(hasDanglingPart(numBits));
 	return numWords;
 }
 
