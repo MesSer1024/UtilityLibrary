@@ -38,8 +38,8 @@ public:
 	BitWordType* end() const { return data() + _numWords; }
 
 private:
-	const u32 _numBits;
-	const u32 _numWords;
+	u32 _numBits;
+	u32 _numWords;
 	std::unique_ptr<BitWordType[]> _data;
 };
 

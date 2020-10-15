@@ -54,8 +54,8 @@ private:
 	BitWordType* __restrict _rhs;
 	BitWordType _danglingMask;
 
-	const u32 _numWords;
-	const u32 _numBits;
+	u32 _numWords;
+	u32 _numBits;
 };
 
 }
