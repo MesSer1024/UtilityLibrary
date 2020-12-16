@@ -4,7 +4,7 @@
 namespace ddahlkvist
 {
 
-int dummy_bind()
+int core_dummy()
 {
 	return 42;
 }

@@ -22,6 +22,6 @@ namespace ddahlkvist
 #define CORE_INTERNAL
 #endif
 
-CORE_PUBLIC int dummy_bind(); // dummy to get something to compile
+CORE_PUBLIC int core_dummy(); // dummy to get something to compile
 
 }

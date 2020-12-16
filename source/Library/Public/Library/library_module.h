@@ -22,6 +22,6 @@ namespace ddahlkvist
 #define LIBRARY_INTERNAL
 #endif
 
-LIBRARY_PUBLIC int dummy_bind(); // dummy to get something to compile
+LIBRARY_PUBLIC int library_dummy(); // dummy to get something to compile
 
 }
